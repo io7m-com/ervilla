@@ -41,6 +41,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * A container supervisor.
@@ -50,6 +52,10 @@ public final class EContainerSupervisor implements EContainerSupervisorType
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(EContainerSupervisor.class);
+
+  private static final Consumer<String> IGNORING =
+    text -> {
+    };
 
   private final EContainerConfiguration configuration;
   private final HashMap<String, EContainer> containers;
@@ -186,7 +192,12 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       arguments.addAll(spec.arguments());
 
       final var process =
-        this.executeLogged(Optional.of(uniqueName), "podman", arguments);
+        this.executeLogged(
+          Optional.of(uniqueName),
+          "podman",
+          arguments,
+          IGNORING
+        );
 
       MDC.put("Container", uniqueName);
       MDC.put("PID", Long.toUnsignedString(process.pid()));
@@ -202,16 +213,31 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       psArgs.add("--filter");
       psArgs.add("name=%s".formatted(uniqueName));
       psArgs.add("--format");
-      psArgs.add("{{.ID}}");
+      psArgs.add("{{.Status}}");
 
       while (container.process.isAlive()) {
+        final var statusText =
+          new AtomicReference<String>();
+
         final var statusProc =
-          this.executeLogged(Optional.of(uniqueName), "status", psArgs);
+          this.executeLogged(
+            Optional.of(uniqueName),
+            "status",
+            psArgs,
+            statusText::set
+          );
+
         final int exitCode =
           statusProc.waitFor();
 
         if (exitCode == 0) {
-          break;
+          final var status = statusText.get();
+          if (status != null) {
+            if (status.toUpperCase().startsWith("UP ")) {
+              break;
+            }
+            LOG.debug("Status is {} so will continue to wait.", status);
+          }
         }
 
         Thread.sleep(1_000L);
@@ -229,7 +255,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   private void superviseProcessOutput(
     final Optional<String> container,
     final String command,
-    final Process process)
+    final Process process,
+    final Consumer<String> receiver)
   {
     this.ioSupervisor.execute(() -> {
       MDC.put("PID", Long.toUnsignedString(process.pid()));
@@ -243,6 +270,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
             break;
           }
           LOG.trace("{}", line);
+          receiver.accept(line);
         }
       } catch (final Exception e) {
         LOG.trace("", e);
@@ -277,7 +305,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   private Process executeLogged(
     final Optional<String> container,
     final String name,
-    final List<String> command)
+    final List<String> command,
+    final Consumer<String> lineConsumer)
     throws IOException
   {
     LOG.debug("Exec: {}", command);
@@ -287,7 +316,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         .start();
 
     this.superviseProcessError(container, name, process);
-    this.superviseProcessOutput(container, name, process);
+    this.superviseProcessOutput(container, name, process, lineConsumer);
     return process;
   }
 
@@ -350,7 +379,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           this.supervisor.executeLogged(
             Optional.of(this.name),
             command.get(0),
-            execArgs
+            execArgs,
+            IGNORING
           );
 
         execProcess.waitFor(time, unit);
@@ -394,7 +424,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           this.supervisor.executeLogged(
             Optional.of(this.name),
             "cp",
-            copyArgs
+            copyArgs,
+            IGNORING
           );
 
         copyProcess.waitFor();
@@ -438,7 +469,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           this.supervisor.executeLogged(
             Optional.of(this.name),
             "cp",
-            copyArgs
+            copyArgs,
+            IGNORING
           );
 
         copyProcess.waitFor();
@@ -485,7 +517,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           this.supervisor.executeLogged(
             Optional.of(this.name),
             "stop",
-            stopArgs
+            stopArgs,
+            IGNORING
           );
 
         try {
