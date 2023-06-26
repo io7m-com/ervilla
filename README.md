@@ -72,7 +72,7 @@ public final class ErvillaExtensionContainerPerTest
   @BeforeEach
   public void setup(
     final EContainerSupervisorType supervisor)
-    throws IOException
+    throws Exception
   {
     this.container =
       supervisor.start(
@@ -141,7 +141,7 @@ public final class ErvillaExtensionCloseAfterAllTest
   @BeforeAll
   public static void beforeAll(
     final @ErvillaCloseAfterAll EContainerSupervisorType supervisor)
-    throws IOException
+    throws Exception
   {
     CONTAINER =
       supervisor.start(
@@ -150,8 +150,6 @@ public final class ErvillaExtensionCloseAfterAllTest
             "io7mcom/idstore",
             "1.0.0-beta0013"
           )
-          .setImageHash(
-            "sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
           .addPublishPort(new EPortPublish(
             Optional.empty(),
             51000,
