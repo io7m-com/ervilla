@@ -355,7 +355,6 @@ public final class EContainerSupervisor implements EContainerSupervisorType
 
         execProcess.waitFor(time, unit);
         return execProcess.exitValue();
-
       } finally {
         MDC.remove("Container");
         MDC.remove("PID");
@@ -401,7 +400,11 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         copyProcess.waitFor();
         if (copyProcess.exitValue() != 0) {
           throw new IOException(
-            "Process returned exit code %d".formatted(copyProcess.exitValue())
+            "Process '%s' returned exit code %d"
+              .formatted(
+                copyArgs,
+                Integer.valueOf(copyProcess.exitValue())
+              )
           );
         }
       } finally {
@@ -441,7 +444,11 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         copyProcess.waitFor();
         if (copyProcess.exitValue() != 0) {
           throw new IOException(
-            "Process returned exit code %d".formatted(copyProcess.exitValue())
+            "Process '%s' returned exit code %d"
+              .formatted(
+                copyArgs,
+                Integer.valueOf(copyProcess.exitValue())
+              )
           );
         }
       } finally {
