@@ -36,5 +36,5 @@ public interface EContainerSupervisorType
    */
 
   EContainerType start(EContainerSpec spec)
-    throws IOException;
+    throws IOException, InterruptedException;
 }

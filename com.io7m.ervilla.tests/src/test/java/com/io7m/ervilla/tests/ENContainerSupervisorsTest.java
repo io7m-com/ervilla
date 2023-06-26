@@ -22,12 +22,17 @@ import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class ENContainerSupervisorsTest
@@ -111,6 +116,55 @@ public final class ENContainerSupervisorsTest
             .addArgument("version")
             .build()
         );
+      assertTrue(c.name().startsWith("ERVILLA-"));
+    }
+  }
+
+  @Test
+  public void testRunExec(
+    final @TempDir Path directory)
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(EContainerConfiguration.defaults())
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults())) {
+      final var c =
+        supervisor.start(
+          EContainerSpec.builder(
+              "docker.io",
+              "postgres",
+              "15.3-alpine3.18"
+            )
+            .addPublishPort(new EPortPublish(
+              Optional.of("[::]"),
+              5432,
+              5432,
+              TCP
+            ))
+            .addEnvironmentVariable("POSTGRES_DB", "xyz")
+            .addEnvironmentVariable("POSTGRES_PASSWORD", "xyz")
+            .addEnvironmentVariable("POSTGRES_USER", "xyz")
+            .build()
+        );
+
+      final var fileIn =
+        directory.resolve("HELLO.TXT");
+      final var fileOut =
+        directory.resolve("GOODBYE.TXT");
+
+      Files.writeString(fileIn, "HELLO!");
+      c.copyInto(fileIn, "/HELLO.TXT");
+      c.copyFrom("/HELLO.TXT", fileOut);
+      c.executeAndWaitIndefinitely(List.of("ls", "/"));
+
+      assertEquals("HELLO!", Files.readString(fileOut));
       assertTrue(c.name().startsWith("ERVILLA-"));
     }
   }

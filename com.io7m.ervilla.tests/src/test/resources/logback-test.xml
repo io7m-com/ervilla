@@ -5,7 +5,7 @@
   <appender name="STDERR"
             class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%level %logger %X{client} %msg%n</pattern>
+      <pattern>%level %logger{1} [%X{Container}] [%X{PID}] %X{Source}: %msg%n</pattern>
     </encoder>
     <target>System.err</target>
   </appender>
