@@ -8,12 +8,12 @@
   <parent>
     <groupId>com.io7m.primogenitor</groupId>
     <artifactId>com.io7m.primogenitor.full</artifactId>
-    <version>7.5.0</version>
+    <version>7.7.0</version>
   </parent>
 
   <groupId>com.io7m.ervilla</groupId>
   <artifactId>com.io7m.ervilla</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.ervilla</name>
@@ -28,9 +28,9 @@
   </modules>
 
   <properties>
-    <com.io7m.quarrel.version>1.0.0</com.io7m.quarrel.version>
+    <com.io7m.quarrel.version>1.2.0</com.io7m.quarrel.version>
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
-    <io7m.api.previousVersion>0.0.1-SNAPSHOT</io7m.api.previousVersion>
+    <io7m.api.previousVersion>0.0.1</io7m.api.previousVersion>
     <jqwik.version>1.7.3</jqwik.version>
     <junit.version>5.9.3</junit.version>
   </properties>
@@ -97,7 +97,7 @@
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.4.7</version>
+        <version>1.4.8</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.jdeferthrow</groupId>
@@ -136,12 +136,12 @@
       <dependency>
         <groupId>nl.jqno.equalsverifier</groupId>
         <artifactId>equalsverifier</artifactId>
-        <version>3.14.2</version>
+        <version>3.14.3</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.3.1</version>
+        <version>5.4.0</version>
       </dependency>
       <dependency>
         <groupId>net.jqwik</groupId>
