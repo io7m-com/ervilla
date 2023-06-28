@@ -21,6 +21,8 @@ import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EReadyChecks;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
+import com.io7m.ervilla.postgres.EPgReadyCheck;
+import com.io7m.ervilla.postgres.EPgSpecs;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -138,22 +140,14 @@ public final class ENContainerSupervisorsTest
            supervisors.create(EContainerConfiguration.defaults())) {
       final var c =
         supervisor.start(
-          EContainerSpec.builder(
-              "docker.io",
-              "postgres",
-              "15.3-alpine3.18"
-            )
-            .addPublishPort(new EPortPublish(
-              Optional.of("[::]"),
-              5432,
-              5432,
-              TCP
-            ))
-            .addEnvironmentVariable("POSTGRES_DB", "xyz")
-            .addEnvironmentVariable("POSTGRES_PASSWORD", "xyz")
-            .addEnvironmentVariable("POSTGRES_USER", "xyz")
-            .setReadyCheck(EReadyChecks.checkTCPSocket("[::]", 5432))
-            .build()
+          EPgSpecs.builderFromDockerIO(
+            "15.3-alpine3.18",
+            Optional.of("[::]"),
+            5432,
+            "db-xyz",
+            "db-user",
+            "db-password"
+          ).build()
         );
 
       final var fileIn =

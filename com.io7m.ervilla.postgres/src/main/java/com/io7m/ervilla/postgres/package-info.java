@@ -15,15 +15,12 @@
  */
 
 /**
- * Podman testing service (API)
+ * Podman testing service (PostgreSQL support)
  */
 
-module com.io7m.ervilla.api
-{
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+@Version("1.0.0")
+@Export
+package com.io7m.ervilla.postgres;
 
-  requires org.slf4j;
-
-  exports com.io7m.ervilla.api;
-}
+import org.osgi.annotation.bundle.Export;
+import org.osgi.annotation.versioning.Version;

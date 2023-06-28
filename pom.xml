@@ -23,6 +23,7 @@
   <modules>
     <module>com.io7m.ervilla.api</module>
     <module>com.io7m.ervilla.native_exec</module>
+    <module>com.io7m.ervilla.postgres</module>
     <module>com.io7m.ervilla.test_extension</module>
     <module>com.io7m.ervilla.tests</module>
   </modules>
@@ -103,6 +104,11 @@
         <groupId>com.io7m.jdeferthrow</groupId>
         <artifactId>com.io7m.jdeferthrow.core</artifactId>
         <version>1.2.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.6.0</version>
       </dependency>
 
       <!-- Build metadata -->

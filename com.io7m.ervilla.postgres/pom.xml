@@ -11,16 +11,12 @@
     <groupId>com.io7m.ervilla</groupId>
     <version>0.0.2-SNAPSHOT</version>
   </parent>
-  <artifactId>com.io7m.ervilla.tests</artifactId>
+  <artifactId>com.io7m.ervilla.postgres</artifactId>
 
   <packaging>jar</packaging>
-  <name>com.io7m.ervilla.tests</name>
-  <description>Podman testing service (Test suite)</description>
+  <name>com.io7m.ervilla.postgres</name>
+  <description>Podman testing service (PostgreSQL support)</description>
   <url>https://www.github.com/io7m/ervilla</url>
-
-  <properties>
-    <mdep.analyze.skip>true</mdep.analyze.skip>
-  </properties>
 
   <dependencies>
     <dependency>
@@ -28,34 +24,14 @@
       <artifactId>com.io7m.ervilla.api</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>com.io7m.ervilla.native_exec</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>com.io7m.ervilla.test_extension</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>com.io7m.ervilla.postgres</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
     </dependency>
 
     <dependency>
@@ -72,10 +48,16 @@
 
   <build>
     <plugins>
-      <!-- Determine test coverage -->
+      <!-- Ignore dependencies that bytecode analysis gets wrong. -->
       <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <failOnWarning>true</failOnWarning>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>org.postgresql:*</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
+        </configuration>
       </plugin>
     </plugins>
   </build>

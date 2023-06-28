@@ -221,6 +221,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   private static void startCheckContainerReady(
     final EContainerSpec spec,
     final EContainer container)
+    throws InterruptedException
   {
     /*
      * Run the ready check; the container might be "up", but the application
@@ -235,7 +236,9 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           break;
         }
         LOG.debug("Ready check returned false. Pausing...");
-        Thread.sleep(100L);
+        Thread.sleep(50L);
+      } catch (final InterruptedException e) {
+        throw e;
       } catch (final Exception e) {
         LOG.trace("Ready check failed: ", e);
       }

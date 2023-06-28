@@ -55,4 +55,20 @@ public final class EReadyChecks
   {
     return new EReadyCheckTCPSocket(address, port);
   }
+
+  /**
+   * A ready check that tries connecting to a TCP socket and reading a single byte.
+   *
+   * @param address The address
+   * @param port    The port
+   *
+   * @return A ready check
+   */
+
+  public static EReadyCheckType checkTCPSocketRead(
+    final String address,
+    final int port)
+  {
+    return new EReadyCheckTCPSocketRead(address, port);
+  }
 }
