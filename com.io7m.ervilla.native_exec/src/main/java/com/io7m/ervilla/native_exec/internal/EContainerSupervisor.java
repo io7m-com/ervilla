@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -206,8 +207,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         new EContainer(this, this.configuration, spec, uniqueName, process);
 
       this.containers.put(uniqueName, container);
-      this.startCheckContainerUp(uniqueName, container);
-      startCheckContainerReady(spec, container);
+      this.startContainerAwait(spec, uniqueName, container);
 
       LOG.debug("Container appears to be running.");
       return container;
@@ -215,6 +215,46 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       MDC.remove("Container");
       MDC.remove("PID");
       MDC.remove("Source");
+    }
+  }
+
+  private void startContainerAwait(
+    final EContainerSpec spec,
+    final String uniqueName,
+    final EContainer container)
+    throws InterruptedException, IOException
+  {
+    final var completionLatch =
+      new CountDownLatch(1);
+    final var existing =
+      MDC.getCopyOfContextMap();
+
+    final var thread = new Thread(() -> {
+      try {
+        MDC.setContextMap(existing);
+        this.startCheckContainerUp(uniqueName, container);
+        startCheckContainerReady(spec, container);
+        completionLatch.countDown();
+      } catch (final Exception e) {
+        LOG.error("Failed waiting for container: ", e);
+      }
+    });
+    thread.setDaemon(true);
+    thread.setName("com.io7m.ervilla.native_exec.await");
+    thread.start();
+
+    try {
+      final var completed =
+        completionLatch.await(
+          this.configuration.startupWaitTime(),
+          this.configuration.startupWaitTimeUnit()
+        );
+
+      if (!completed) {
+        throw new IOException("Timed out waiting for container to start.");
+      }
+    } finally {
+      thread.interrupt();
     }
   }
 
@@ -235,8 +275,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           LOG.debug("Ready check returned true.");
           break;
         }
-        LOG.debug("Ready check returned false. Pausing...");
-        Thread.sleep(50L);
+        Thread.sleep(10L);
       } catch (final InterruptedException e) {
         throw e;
       } catch (final Exception e) {
@@ -283,11 +322,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           if (status.toUpperCase().startsWith("UP ")) {
             break;
           }
-          LOG.debug("Status is {} so will continue to wait.", status);
         }
       }
-
-      Thread.sleep(100L);
     }
   }
 

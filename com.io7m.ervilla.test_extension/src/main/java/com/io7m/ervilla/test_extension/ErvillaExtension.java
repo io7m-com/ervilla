@@ -155,7 +155,9 @@ public final class ErvillaExtension
       configuration = EContainerConfiguration.defaults();
     } else {
       configuration = new EContainerConfiguration(
-        annotation.podmanExecutable()
+        annotation.podmanExecutable(),
+        annotation.startupWaitTime(),
+        annotation.startupWaitTimeUnit()
       );
     }
     return configuration;

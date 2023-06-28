@@ -19,9 +19,7 @@ package com.io7m.ervilla.tests;
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EPortPublish;
-import com.io7m.ervilla.api.EReadyChecks;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
-import com.io7m.ervilla.postgres.EPgReadyCheck;
 import com.io7m.ervilla.postgres.EPgSpecs;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -33,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,7 +72,11 @@ public final class ENContainerSupervisorsTest
       new ENContainerSupervisors();
     final var support =
       supervisors.isSupported(
-        new EContainerConfiguration("THIS-DOES-NOT-EXIST"));
+        new EContainerConfiguration(
+          "THIS-DOES-NOT-EXIST",
+          30L,
+          TimeUnit.SECONDS)
+      );
 
     assertTrue(support.isEmpty());
   }
@@ -99,7 +102,8 @@ public final class ENContainerSupervisorsTest
               "io7mcom/idstore",
               "1.0.0-beta0013"
             )
-            .setImageHash("sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
+            .setImageHash(
+              "sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
             .addPublishPort(new EPortPublish(
               Optional.empty(),
               51000,

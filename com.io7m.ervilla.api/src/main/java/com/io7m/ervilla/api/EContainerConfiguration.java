@@ -18,25 +18,33 @@
 package com.io7m.ervilla.api;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The container configuration.
  *
- * @param podmanExecutable The podman executable
+ * @param podmanExecutable    The podman executable
+ * @param startupWaitTime     The startup wait time
+ * @param startupWaitTimeUnit The startup wait time unit
  */
 
 public record EContainerConfiguration(
-  String podmanExecutable)
+  String podmanExecutable,
+  long startupWaitTime,
+  TimeUnit startupWaitTimeUnit)
 {
   /**
    * The container configuration.
    *
-   * @param podmanExecutable The podman executable
+   * @param podmanExecutable    The podman executable
+   * @param startupWaitTime     The startup wait time
+   * @param startupWaitTimeUnit The startup wait time unit
    */
 
   public EContainerConfiguration
   {
     Objects.requireNonNull(podmanExecutable, "podmanExecutable");
+    Objects.requireNonNull(startupWaitTimeUnit, "startupWaitTimeUnit");
   }
 
   /**
@@ -45,6 +53,10 @@ public record EContainerConfiguration(
 
   public static EContainerConfiguration defaults()
   {
-    return new EContainerConfiguration("podman");
+    return new EContainerConfiguration(
+      "podman",
+      30L,
+      TimeUnit.SECONDS
+    );
   }
 }
