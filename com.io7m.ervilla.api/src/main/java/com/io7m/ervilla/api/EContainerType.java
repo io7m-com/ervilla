@@ -16,6 +16,11 @@
 
 package com.io7m.ervilla.api;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 /**
  * A running container.
  */
@@ -27,4 +32,70 @@ public interface EContainerType extends AutoCloseable
    */
 
   String name();
+
+  /**
+   * Execute the given command inside the container and wait a fixed
+   * time for it to complete.
+   *
+   * @param command The command and arguments
+   * @param time    The maximum time to wait
+   * @param unit    The time unit
+   *
+   * @return The exit code of the command
+   *
+   * @throws InterruptedException On interruption
+   * @throws IOException          If the process cannot be started
+   */
+
+  int executeAndWait(
+    List<String> command,
+    long time,
+    TimeUnit unit)
+    throws InterruptedException, IOException;
+
+  /**
+   * Execute the given command inside the container and wait indefinitely
+   * for it to complete.
+   *
+   * @param command The command and arguments
+   *
+   * @return The exit code of the command
+   *
+   * @throws InterruptedException On interruption
+   * @throws IOException          If the process cannot be started
+   */
+
+  int executeAndWaitIndefinitely(
+    List<String> command)
+    throws IOException, InterruptedException;
+
+  /**
+   * Copy a file or directory into the container.
+   *
+   * @param source      The source file/directory
+   * @param destination The destination inside the container
+   *
+   * @throws InterruptedException On interruption
+   * @throws IOException          If the process cannot be started
+   */
+
+  void copyInto(
+    Path source,
+    String destination)
+    throws InterruptedException, IOException;
+
+  /**
+   * Copy a file or directory out of the container.
+   *
+   * @param source      The source file/directory inside the container
+   * @param destination The destination on the host
+   *
+   * @throws InterruptedException On interruption
+   * @throws IOException          If the process cannot be started
+   */
+
+  void copyFrom(
+    String source,
+    Path destination)
+    throws InterruptedException, IOException;
 }

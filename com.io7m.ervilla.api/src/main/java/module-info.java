@@ -23,5 +23,7 @@ module com.io7m.ervilla.api
   requires static org.osgi.annotation.bundle;
   requires static org.osgi.annotation.versioning;
 
+  requires org.slf4j;
+
   exports com.io7m.ervilla.api;
 }

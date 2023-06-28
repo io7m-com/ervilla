@@ -9,7 +9,7 @@
   <parent>
     <artifactId>com.io7m.ervilla</artifactId>
     <groupId>com.io7m.ervilla</groupId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
   </parent>
   <artifactId>com.io7m.ervilla.tests</artifactId>
 
@@ -36,6 +36,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>com.io7m.ervilla.test_extension</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>com.io7m.ervilla.postgres</artifactId>
       <version>${project.version}</version>
     </dependency>
 

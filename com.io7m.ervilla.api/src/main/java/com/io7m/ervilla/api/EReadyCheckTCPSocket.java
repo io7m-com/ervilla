@@ -14,27 +14,43 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.ervilla.api;
 
-import java.io.IOException;
+import java.net.Socket;
+import java.util.Objects;
 
 /**
- * A container supervisor.
+ * A ready check that succeeds if a TCP can be successfully connected to.
  */
 
-public interface EContainerSupervisorType
-  extends AutoCloseable
+public final class EReadyCheckTCPSocket implements EReadyCheckType
 {
+  private final String address;
+  private final int port;
+
   /**
-   * Start a new container.
+   * A ready check that succeeds if a TCP can be successfully connected to.
    *
-   * @param spec The container spec
-   *
-   * @return A running container
-   *
-   * @throws IOException On errors
+   * @param inAddress The address
+   * @param inPort    The port
    */
 
-  EContainerType start(EContainerSpec spec)
-    throws IOException, InterruptedException;
+  public EReadyCheckTCPSocket(
+    final String inAddress,
+    final int inPort)
+  {
+    this.address =
+      Objects.requireNonNull(inAddress, "address");
+    this.port = inPort;
+  }
+
+  @Override
+  public boolean isReady()
+    throws Exception
+  {
+    try (var socket = new Socket(this.address, this.port)) {
+      return socket.isConnected();
+    }
+  }
 }

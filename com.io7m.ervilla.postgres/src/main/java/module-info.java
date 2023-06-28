@@ -14,27 +14,18 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package com.io7m.ervilla.api;
-
-import java.io.IOException;
-
 /**
- * A container supervisor.
+ * Podman testing service (Native implementation)
  */
 
-public interface EContainerSupervisorType
-  extends AutoCloseable
+module com.io7m.ervilla.postgres
 {
-  /**
-   * Start a new container.
-   *
-   * @param spec The container spec
-   *
-   * @return A running container
-   *
-   * @throws IOException On errors
-   */
+  requires static org.osgi.annotation.bundle;
+  requires static org.osgi.annotation.versioning;
 
-  EContainerType start(EContainerSpec spec)
-    throws IOException, InterruptedException;
+  requires java.sql;
+  requires com.io7m.ervilla.api;
+  requires org.slf4j;
+
+  exports com.io7m.ervilla.postgres;
 }

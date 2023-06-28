@@ -42,7 +42,7 @@ public final class ErvillaExtensionContainerPerTest
   @BeforeEach
   public void setup(
     final EContainerSupervisorType supervisor)
-    throws IOException
+    throws IOException, InterruptedException
   {
     this.container =
       supervisor.start(

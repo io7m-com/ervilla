@@ -20,14 +20,21 @@ import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
+import com.io7m.ervilla.postgres.EPgSpecs;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class ENContainerSupervisorsTest
@@ -65,7 +72,11 @@ public final class ENContainerSupervisorsTest
       new ENContainerSupervisors();
     final var support =
       supervisors.isSupported(
-        new EContainerConfiguration("THIS-DOES-NOT-EXIST"));
+        new EContainerConfiguration(
+          "THIS-DOES-NOT-EXIST",
+          30L,
+          TimeUnit.SECONDS)
+      );
 
     assertTrue(support.isEmpty());
   }
@@ -91,7 +102,8 @@ public final class ENContainerSupervisorsTest
               "io7mcom/idstore",
               "1.0.0-beta0013"
             )
-            .setImageHash("sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
+            .setImageHash(
+              "sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
             .addPublishPort(new EPortPublish(
               Optional.empty(),
               51000,
@@ -111,6 +123,48 @@ public final class ENContainerSupervisorsTest
             .addArgument("version")
             .build()
         );
+      assertTrue(c.name().startsWith("ERVILLA-"));
+    }
+  }
+
+  @Test
+  public void testRunExec(
+    final @TempDir Path directory)
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(EContainerConfiguration.defaults())
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults())) {
+      final var c =
+        supervisor.start(
+          EPgSpecs.builderFromDockerIO(
+            "15.3-alpine3.18",
+            Optional.of("[::]"),
+            5432,
+            "db-xyz",
+            "db-user",
+            "db-password"
+          ).build()
+        );
+
+      final var fileIn =
+        directory.resolve("HELLO.TXT");
+      final var fileOut =
+        directory.resolve("GOODBYE.TXT");
+
+      Files.writeString(fileIn, "HELLO!");
+      c.copyInto(fileIn, "/HELLO.TXT");
+      c.copyFrom("/HELLO.TXT", fileOut);
+      c.executeAndWaitIndefinitely(List.of("ls", "/"));
+
+      assertEquals("HELLO!", Files.readString(fileOut));
       assertTrue(c.name().startsWith("ERVILLA-"));
     }
   }

@@ -22,6 +22,7 @@ open module com.io7m.ervilla.tests
 {
   requires com.io7m.ervilla.api;
   requires com.io7m.ervilla.native_exec;
+  requires com.io7m.ervilla.postgres;
   requires com.io7m.ervilla.test_extension;
 
   requires static org.osgi.annotation.bundle;

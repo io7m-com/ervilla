@@ -33,6 +33,7 @@ import java.util.Optional;
  * @param ports       The set of ports to publish
  * @param environment The set of environment variables
  * @param arguments   The entrypoint arguments
+ * @param readyCheck The check used to determine if the container is ready
  */
 
 public record EContainerSpec(
@@ -42,7 +43,8 @@ public record EContainerSpec(
   Optional<String> imageHash,
   List<EPortPublish> ports,
   Map<String, String> environment,
-  List<String> arguments)
+  List<String> arguments,
+  EReadyCheckType readyCheck)
 {
   /**
    * Parameters needed to start a container.
@@ -54,6 +56,7 @@ public record EContainerSpec(
    * @param ports       The set of ports to publish
    * @param environment The set of environment variables
    * @param arguments   The entrypoint arguments
+   * @param readyCheck  A check used to determine if the container is ready
    */
 
   public EContainerSpec
@@ -65,6 +68,7 @@ public record EContainerSpec(
     Objects.requireNonNull(imageTag, "imageTag");
     Objects.requireNonNull(ports, "ports");
     Objects.requireNonNull(registry, "registry");
+    Objects.requireNonNull(readyCheck, "readyCheck");
   }
 
   /**
@@ -109,6 +113,7 @@ public record EContainerSpec(
     private final String registry;
     private final String imageName;
     private final String imageTag;
+    private EReadyCheckType readyCheck;
     private Optional<String> imageHash;
     private final List<EPortPublish> ports;
     private final Map<String, String> environment;
@@ -134,6 +139,8 @@ public record EContainerSpec(
         new HashMap<>();
       this.arguments =
         new ArrayList<>();
+      this.readyCheck =
+        EReadyChecks.assumeAlwaysReady();
     }
 
     /**
@@ -202,6 +209,21 @@ public record EContainerSpec(
     }
 
     /**
+     * Set the ready check.
+     *
+     * @param check The check
+     *
+     * @return this
+     */
+
+    public Builder setReadyCheck(
+      final EReadyCheckType check)
+    {
+      this.readyCheck = Objects.requireNonNull(check, "check");
+      return this;
+    }
+
+    /**
      * @return A container spec based on the parameters so far
      */
 
@@ -214,7 +236,8 @@ public record EContainerSpec(
         this.imageHash,
         this.ports,
         this.environment,
-        this.arguments
+        this.arguments,
+        this.readyCheck
       );
     }
   }

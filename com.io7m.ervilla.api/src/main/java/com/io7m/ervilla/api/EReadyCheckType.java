@@ -14,27 +14,26 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.ervilla.api;
 
-import java.io.IOException;
-
 /**
- * A container supervisor.
+ * <p>A ready check.</p>
+ *
+ * <p>A container is not considered to be properly running until its associated
+ * ready check succeeds.</p>
  */
 
-public interface EContainerSupervisorType
-  extends AutoCloseable
+public interface EReadyCheckType
 {
   /**
-   * Start a new container.
+   * Execute the check.
    *
-   * @param spec The container spec
+   * @return {@code true} if the container is ready.
    *
-   * @return A running container
-   *
-   * @throws IOException On errors
+   * @throws Exception On errors
    */
 
-  EContainerType start(EContainerSpec spec)
-    throws IOException, InterruptedException;
+  boolean isReady()
+    throws Exception;
 }

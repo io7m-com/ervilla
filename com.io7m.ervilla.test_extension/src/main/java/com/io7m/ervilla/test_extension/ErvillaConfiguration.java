@@ -20,6 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Configuration information for the Ervilla extension.
@@ -40,4 +41,16 @@ public @interface ErvillaConfiguration
    */
 
   boolean disabledIfUnsupported() default false;
+
+  /**
+   * @return The startup wait time
+   */
+
+  long startupWaitTime() default 30L;
+
+  /**
+   * @return The startup wait time unit
+   */
+
+  TimeUnit startupWaitTimeUnit() default TimeUnit.SECONDS;
 }

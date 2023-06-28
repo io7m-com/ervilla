@@ -45,7 +45,7 @@ public final class ErvillaExtensionCloseAfterAllTest
   @BeforeAll
   public static void beforeAll(
     final @ErvillaCloseAfterAll EContainerSupervisorType supervisor)
-    throws IOException
+    throws IOException, InterruptedException
   {
     CONTAINER =
       supervisor.start(
