@@ -206,42 +206,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         new EContainer(this, this.configuration, spec, uniqueName, process);
 
       this.containers.put(uniqueName, container);
-
-      final var psArgs = new ArrayList<String>();
-      psArgs.add(this.configuration.podmanExecutable());
-      psArgs.add("ps");
-      psArgs.add("--filter");
-      psArgs.add("name=%s".formatted(uniqueName));
-      psArgs.add("--format");
-      psArgs.add("{{.Status}}");
-
-      while (container.process.isAlive()) {
-        final var statusText =
-          new AtomicReference<String>();
-
-        final var statusProc =
-          this.executeLogged(
-            Optional.of(uniqueName),
-            "status",
-            psArgs,
-            statusText::set
-          );
-
-        final int exitCode =
-          statusProc.waitFor();
-
-        if (exitCode == 0) {
-          final var status = statusText.get();
-          if (status != null) {
-            if (status.toUpperCase().startsWith("UP ")) {
-              break;
-            }
-            LOG.debug("Status is {} so will continue to wait.", status);
-          }
-        }
-
-        Thread.sleep(1_000L);
-      }
+      this.startCheckContainerUp(uniqueName, container);
+      startCheckContainerReady(spec, container);
 
       LOG.debug("Container appears to be running.");
       return container;
@@ -249,6 +215,76 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       MDC.remove("Container");
       MDC.remove("PID");
       MDC.remove("Source");
+    }
+  }
+
+  private static void startCheckContainerReady(
+    final EContainerSpec spec,
+    final EContainer container)
+  {
+    /*
+     * Run the ready check; the container might be "up", but the application
+     * within it might not be ready yet.
+     */
+
+    final var readyCheck = spec.readyCheck();
+    while (container.process.isAlive()) {
+      try {
+        if (readyCheck.isReady()) {
+          LOG.debug("Ready check returned true.");
+          break;
+        }
+        LOG.debug("Ready check returned false. Pausing...");
+        Thread.sleep(100L);
+      } catch (final Exception e) {
+        LOG.trace("Ready check failed: ", e);
+      }
+    }
+  }
+
+  private void startCheckContainerUp(
+    final String uniqueName,
+    final EContainer container)
+    throws IOException, InterruptedException
+  {
+    /*
+     * Run the container "up" check.
+     */
+
+    final var psArgs = new ArrayList<String>();
+    psArgs.add(this.configuration.podmanExecutable());
+    psArgs.add("ps");
+    psArgs.add("--filter");
+    psArgs.add("name=%s".formatted(uniqueName));
+    psArgs.add("--format");
+    psArgs.add("{{.Status}}");
+
+    while (container.process.isAlive()) {
+      final var statusText =
+        new AtomicReference<String>();
+
+      final var statusProc =
+        this.executeLogged(
+          Optional.of(uniqueName),
+          "status",
+          psArgs,
+          statusText::set
+        );
+
+      final int exitCode =
+        statusProc.waitFor();
+
+      if (exitCode == 0) {
+        final var status = statusText.get();
+        if (status != null) {
+          if (status.toUpperCase().startsWith("UP ")) {
+            break;
+          }
+          LOG.debug("Status is {} so will continue to wait.", status);
+        }
+      }
+
+      Thread.sleep(100L);
     }
   }
 

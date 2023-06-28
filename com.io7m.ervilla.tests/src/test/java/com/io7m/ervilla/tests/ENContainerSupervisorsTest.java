@@ -19,6 +19,7 @@ package com.io7m.ervilla.tests;
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EPortPublish;
+import com.io7m.ervilla.api.EReadyChecks;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -151,6 +152,7 @@ public final class ENContainerSupervisorsTest
             .addEnvironmentVariable("POSTGRES_DB", "xyz")
             .addEnvironmentVariable("POSTGRES_PASSWORD", "xyz")
             .addEnvironmentVariable("POSTGRES_USER", "xyz")
+            .setReadyCheck(EReadyChecks.checkTCPSocket("[::]", 5432))
             .build()
         );
 
