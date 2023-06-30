@@ -21,6 +21,7 @@ import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
 import com.io7m.ervilla.api.EPortPublish;
+import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.jdeferthrow.core.ExceptionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,6 +187,10 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         arguments.add("--publish");
         arguments.add(portSpec(port));
       }
+      for (final var mount : spec.volumeMounts()) {
+        arguments.add("--volume");
+        arguments.add(volumeSpec(mount));
+      }
 
       arguments.add("--name");
       arguments.add(uniqueName);
@@ -216,6 +221,16 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       MDC.remove("PID");
       MDC.remove("Source");
     }
+  }
+
+  private static String volumeSpec(
+    final EVolumeMount mount)
+  {
+    return String.format(
+      "%s:%s",
+      mount.hostPath().toAbsolutePath(),
+      mount.containerPath()
+    );
   }
 
   private void startContainerAwait(

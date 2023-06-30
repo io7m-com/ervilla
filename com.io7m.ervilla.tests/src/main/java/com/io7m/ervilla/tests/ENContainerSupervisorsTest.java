@@ -19,6 +19,7 @@ package com.io7m.ervilla.tests;
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EPortPublish;
+import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
 import com.io7m.ervilla.postgres.EPgSpecs;
 import org.junit.jupiter.api.Assumptions;
@@ -82,7 +83,8 @@ public final class ENContainerSupervisorsTest
   }
 
   @Test
-  public void testRun0()
+  public void testRun0(
+    final @TempDir Path directory)
     throws Exception
   {
     final var supervisors =
@@ -119,6 +121,7 @@ public final class ENContainerSupervisorsTest
             .addEnvironmentVariable("ENV_0", "x")
             .addEnvironmentVariable("ENV_1", "y")
             .addEnvironmentVariable("ENV_2", "z")
+            .addVolumeMount(new EVolumeMount(directory, "/x"))
             .addArgument("help")
             .addArgument("version")
             .build()
