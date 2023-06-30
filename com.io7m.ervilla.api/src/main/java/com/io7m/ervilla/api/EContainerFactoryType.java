@@ -14,31 +14,28 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.ervilla.api;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
- * A container supervisor.
+ * A factory of containers.
  */
 
-public interface EContainerSupervisorType
-  extends AutoCloseable, EContainerFactoryType
+public interface EContainerFactoryType
 {
   /**
-   * Create a new pod.
+   * Start a new container.
    *
-   * @param ports The ports that will be published from within the pod to the host
+   * @param spec The container spec
    *
-   * @return A new pod
+   * @return A running container
    *
    * @throws IOException          On errors
    * @throws InterruptedException On interruption
-   * @see "podman-pod-create"
    */
 
-  EContainerFactoryType createPod(
-    List<EPortPublish> ports)
+  EContainerType start(EContainerSpec spec)
     throws IOException, InterruptedException;
 }

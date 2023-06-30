@@ -17,6 +17,7 @@
 package com.io7m.ervilla.native_exec.internal;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
+import com.io7m.ervilla.api.EContainerFactoryType;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
@@ -61,6 +62,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
 
   private final EContainerConfiguration configuration;
   private final HashMap<String, EContainer> containers;
+  private final HashMap<String, EPod> pods;
   private final ExecutorService ioSupervisor;
   private final SecureRandom rng;
 
@@ -77,6 +79,9 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       Objects.requireNonNull(inConfiguration, "configuration");
     this.containers =
       new HashMap<String, EContainer>();
+    this.pods =
+      new HashMap<String, EPod>();
+
     this.ioSupervisor =
       Executors.newCachedThreadPool(r -> {
         final var thread = new Thread(r);
@@ -149,6 +154,16 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         }
       }
 
+      LOG.debug("Shutting down pods.");
+      for (final var entry : this.pods.entrySet()) {
+        try {
+          final var pod = entry.getValue();
+          pod.close();
+        } catch (final Exception e) {
+          exceptions.addException(e);
+        }
+      }
+
       this.ioSupervisor.shutdown();
       this.ioSupervisor.awaitTermination(5L, TimeUnit.SECONDS);
       exceptions.throwIfNecessary();
@@ -164,6 +179,14 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     final EContainerSpec spec)
     throws IOException, InterruptedException
   {
+    return this.createAndStartContainer(Optional.empty(), spec);
+  }
+
+  private EContainer createAndStartContainer(
+    final Optional<String> pod,
+    final EContainerSpec spec)
+    throws IOException, InterruptedException
+  {
     try {
       MDC.put("Container", "*");
       MDC.put("PID", "*");
@@ -175,7 +198,6 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       final var arguments = new ArrayList<String>();
       arguments.add(this.configuration.podmanExecutable());
       arguments.add("run");
-      arguments.add("--rm");
       arguments.add("--interactive");
       arguments.add("--tty");
 
@@ -183,14 +205,27 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         arguments.add("--env");
         arguments.add("%s=%s".formatted(entry.getKey(), entry.getValue()));
       }
-      for (final var port : spec.ports()) {
-        arguments.add("--publish");
-        arguments.add(portSpec(port));
-      }
+
       for (final var mount : spec.volumeMounts()) {
         arguments.add("--volume");
         arguments.add(volumeSpec(mount));
       }
+
+      /*
+       * Join the container to the pod, if one is specified. Note that this
+       * is mutually exclusive with having published ports; the ports must
+       * be published on the pod.
+       */
+
+      pod.ifPresentOrElse(podName -> {
+        arguments.add("--pod");
+        arguments.add(podName);
+      }, () -> {
+        for (final var port : spec.ports()) {
+          arguments.add("--publish");
+          arguments.add(portSpec(port));
+        }
+      });
 
       arguments.add("--name");
       arguments.add(uniqueName);
@@ -212,7 +247,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         new EContainer(this, this.configuration, spec, uniqueName, process);
 
       this.containers.put(uniqueName, container);
-      this.startContainerAwait(spec, uniqueName, container);
+      container.waitUntilReady();
 
       LOG.debug("Container appears to be running.");
       return container;
@@ -231,115 +266,6 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       mount.hostPath().toAbsolutePath(),
       mount.containerPath()
     );
-  }
-
-  private void startContainerAwait(
-    final EContainerSpec spec,
-    final String uniqueName,
-    final EContainer container)
-    throws InterruptedException, IOException
-  {
-    final var completionLatch =
-      new CountDownLatch(1);
-    final var existing =
-      MDC.getCopyOfContextMap();
-
-    final var thread = new Thread(() -> {
-      try {
-        MDC.setContextMap(existing);
-        this.startCheckContainerUp(uniqueName, container);
-        startCheckContainerReady(spec, container);
-        completionLatch.countDown();
-      } catch (final Exception e) {
-        LOG.error("Failed waiting for container: ", e);
-      }
-    });
-    thread.setDaemon(true);
-    thread.setName("com.io7m.ervilla.native_exec.await");
-    thread.start();
-
-    try {
-      final var completed =
-        completionLatch.await(
-          this.configuration.startupWaitTime(),
-          this.configuration.startupWaitTimeUnit()
-        );
-
-      if (!completed) {
-        throw new IOException("Timed out waiting for container to start.");
-      }
-    } finally {
-      thread.interrupt();
-    }
-  }
-
-  private static void startCheckContainerReady(
-    final EContainerSpec spec,
-    final EContainer container)
-    throws InterruptedException
-  {
-    /*
-     * Run the ready check; the container might be "up", but the application
-     * within it might not be ready yet.
-     */
-
-    final var readyCheck = spec.readyCheck();
-    while (container.process.isAlive()) {
-      try {
-        if (readyCheck.isReady()) {
-          LOG.debug("Ready check returned true.");
-          break;
-        }
-        Thread.sleep(10L);
-      } catch (final InterruptedException e) {
-        throw e;
-      } catch (final Exception e) {
-        LOG.trace("Ready check failed: ", e);
-      }
-    }
-  }
-
-  private void startCheckContainerUp(
-    final String uniqueName,
-    final EContainer container)
-    throws IOException, InterruptedException
-  {
-    /*
-     * Run the container "up" check.
-     */
-
-    final var psArgs = new ArrayList<String>();
-    psArgs.add(this.configuration.podmanExecutable());
-    psArgs.add("ps");
-    psArgs.add("--filter");
-    psArgs.add("name=%s".formatted(uniqueName));
-    psArgs.add("--format");
-    psArgs.add("{{.Status}}");
-
-    while (container.process.isAlive()) {
-      final var statusText =
-        new AtomicReference<String>();
-
-      final var statusProc =
-        this.executeLogged(
-          Optional.of(uniqueName),
-          "status",
-          psArgs,
-          statusText::set
-        );
-
-      final int exitCode =
-        statusProc.waitFor();
-
-      if (exitCode == 0) {
-        final var status = statusText.get();
-        if (status != null) {
-          if (status.toUpperCase().startsWith("UP ")) {
-            break;
-          }
-        }
-      }
-    }
   }
 
   private void superviseProcessOutput(
@@ -410,11 +336,106 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     return process;
   }
 
+  @Override
+  public EContainerFactoryType createPod(
+    final List<EPortPublish> ports)
+    throws IOException, InterruptedException
+  {
+    final var podName =
+      "ERVILLA-POD-%s".formatted(this.freshToken());
+    final var pod =
+      new EPod(podName, this);
+
+    final var createArgs = new ArrayList<String>();
+    createArgs.add(this.configuration.podmanExecutable());
+    createArgs.add("pod");
+    createArgs.add("create");
+    for (final var port : ports) {
+      createArgs.add("--publish");
+      createArgs.add(portSpec(port));
+    }
+    createArgs.add(podName);
+
+    final var createProc =
+      this.executeLogged(
+        Optional.of(podName),
+        "pod-create",
+        createArgs,
+        IGNORING
+      );
+
+    final int exitCode =
+      createProc.waitFor();
+
+    if (exitCode != 0) {
+      throw new IOException("Could not create pod.");
+    }
+
+    this.pods.put(podName, pod);
+    return pod;
+  }
+
+  private static final class EPod
+    implements EContainerFactoryType, AutoCloseable
+  {
+    private final String name;
+    private final EContainerSupervisor supervisor;
+
+    EPod(
+      final String inName,
+      final EContainerSupervisor inSupervisor)
+    {
+      this.name =
+        Objects.requireNonNull(inName, "name");
+      this.supervisor =
+        Objects.requireNonNull(inSupervisor, "supervisor");
+    }
+
+    @Override
+    public EContainerType start(
+      final EContainerSpec spec)
+      throws IOException, InterruptedException
+    {
+      return this.supervisor.createAndStartContainer(
+        Optional.of(this.name),
+        spec
+      );
+    }
+
+    @Override
+    public void close()
+      throws IOException, InterruptedException
+    {
+      final var configuration =
+        this.supervisor.configuration;
+
+      final var rmArgs = new ArrayList<String>();
+      rmArgs.add(configuration.podmanExecutable());
+      rmArgs.add("pod");
+      rmArgs.add("rm");
+      rmArgs.add("-f");
+      rmArgs.add(this.name);
+
+      final var rmProc =
+        this.supervisor.executeLogged(
+          Optional.of(this.name),
+          "pod-rm",
+          rmArgs,
+          IGNORING
+        );
+
+      final int exitCode = rmProc.waitFor();
+      if (exitCode != 0) {
+        throw new IOException("Could not remove pod.");
+      }
+    }
+  }
+
   private static final class EContainer
     implements EContainerType
   {
     private final String name;
-    private final Process process;
+    private volatile Process process;
     private final EContainerSupervisor supervisor;
     private final EContainerConfiguration configuration;
     private final EContainerSpec spec;
@@ -438,6 +459,112 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         Objects.requireNonNull(inProcess, "process");
     }
 
+    /**
+     * Wait until this container is fully ready.
+     */
+
+    void waitUntilReady()
+      throws InterruptedException, IOException
+    {
+      final var completionLatch =
+        new CountDownLatch(1);
+      final var existing =
+        MDC.getCopyOfContextMap();
+
+      final var thread = new Thread(() -> {
+        try {
+          MDC.setContextMap(existing);
+          this.runLivenessCheck();
+          this.runReadyCheck();
+          completionLatch.countDown();
+        } catch (final Exception e) {
+          LOG.error("Failed waiting for container: ", e);
+        }
+      });
+      thread.setDaemon(true);
+      thread.setName("com.io7m.ervilla.native_exec.await");
+      thread.start();
+
+      try {
+        final var completed =
+          completionLatch.await(
+            this.configuration.startupWaitTime(),
+            this.configuration.startupWaitTimeUnit()
+          );
+
+        if (!completed) {
+          throw new IOException("Timed out waiting for container to start.");
+        }
+      } finally {
+        thread.interrupt();
+      }
+    }
+
+    /**
+     * Run the container "up" check.
+     */
+
+    void runLivenessCheck()
+      throws IOException, InterruptedException
+    {
+      final var psArgs = new ArrayList<String>();
+      psArgs.add(this.configuration.podmanExecutable());
+      psArgs.add("ps");
+      psArgs.add("--filter");
+      psArgs.add("name=%s".formatted(this.name));
+      psArgs.add("--format");
+      psArgs.add("{{.Status}}");
+
+      while (this.process.isAlive()) {
+        final var statusText =
+          new AtomicReference<String>();
+
+        final var statusProc =
+          this.supervisor.executeLogged(
+            Optional.of(this.name),
+            "status",
+            psArgs,
+            statusText::set
+          );
+
+        final int exitCode =
+          statusProc.waitFor();
+
+        if (exitCode == 0) {
+          final var status = statusText.get();
+          if (status != null) {
+            if (status.toUpperCase().startsWith("UP ")) {
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    /**
+     * Run the image-specific ready check; the container might be "up", but
+     * the application within it might not be ready yet.
+     */
+
+    void runReadyCheck()
+      throws InterruptedException
+    {
+      final var readyCheck = this.spec.readyCheck();
+      while (this.process.isAlive()) {
+        try {
+          if (readyCheck.isReady()) {
+            LOG.debug("Ready check returned true.");
+            break;
+          }
+          Thread.sleep(100L);
+        } catch (final InterruptedException e) {
+          throw e;
+        } catch (final Exception e) {
+          LOG.trace("Ready check failed: ", e);
+        }
+      }
+    }
+
     @Override
     public String name()
     {
@@ -455,9 +582,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       Objects.requireNonNull(unit, "unit");
 
       try {
-        MDC.put("Container", this.name);
-        MDC.put("PID", Long.toUnsignedString(this.process.pid()));
-        MDC.put("Source", "supervisor");
+        this.mdcPush();
 
         final var execArgs = new ArrayList<String>();
         execArgs.add(this.configuration.podmanExecutable());
@@ -476,9 +601,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         execProcess.waitFor(time, unit);
         return execProcess.exitValue();
       } finally {
-        MDC.remove("Container");
-        MDC.remove("PID");
-        MDC.remove("Source");
+        mdcPop();
       }
     }
 
@@ -500,9 +623,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       Objects.requireNonNull(destination, "destination");
 
       try {
-        MDC.put("Container", this.name);
-        MDC.put("PID", Long.toUnsignedString(this.process.pid()));
-        MDC.put("Source", "supervisor");
+        this.mdcPush();
 
         final var copyArgs = new ArrayList<String>();
         copyArgs.add(this.configuration.podmanExecutable());
@@ -529,9 +650,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           );
         }
       } finally {
-        MDC.remove("Container");
-        MDC.remove("PID");
-        MDC.remove("Source");
+        mdcPop();
       }
     }
 
@@ -545,9 +664,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       Objects.requireNonNull(destination, "destination");
 
       try {
-        MDC.put("Container", this.name);
-        MDC.put("PID", Long.toUnsignedString(this.process.pid()));
-        MDC.put("Source", "supervisor");
+        this.mdcPush();
 
         final var copyArgs = new ArrayList<String>();
         copyArgs.add(this.configuration.podmanExecutable());
@@ -574,33 +691,36 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           );
         }
       } finally {
-        MDC.remove("Container");
-        MDC.remove("PID");
-        MDC.remove("Source");
+        mdcPop();
       }
     }
 
+    private static void mdcPop()
+    {
+      MDC.remove("Container");
+      MDC.remove("PID");
+      MDC.remove("Source");
+    }
+
+    private void mdcPush()
+    {
+      MDC.put("Container", this.name);
+      MDC.put("PID", Long.toUnsignedString(this.process.pid()));
+      MDC.put("Source", "supervisor");
+    }
+
     @Override
-    public void close()
-      throws Exception
+    public void stop()
+      throws InterruptedException, IOException
     {
       try {
-        MDC.put("Container", this.name);
-        MDC.put("PID", Long.toUnsignedString(this.process.pid()));
-        MDC.put("Source", "supervisor");
+        this.mdcPush();
 
-        LOG.debug("Shutting down.");
-        if (!this.process.isAlive()) {
-          LOG.debug("Container is already dead.");
-          return;
-        }
-
-        final var stopArgs = new ArrayList<String>(6);
+        final var stopArgs = new ArrayList<String>();
         stopArgs.add(this.configuration.podmanExecutable());
         stopArgs.add("stop");
-        stopArgs.add("--ignore");
-        stopArgs.add("--time");
-        stopArgs.add("1");
+        stopArgs.add("-t");
+        stopArgs.add("3");
         stopArgs.add(this.name);
 
         final var stopProc =
@@ -610,12 +730,76 @@ public final class EContainerSupervisor implements EContainerSupervisorType
             stopArgs,
             IGNORING
           );
+        stopProc.waitFor(5L, TimeUnit.SECONDS);
+
+        this.process.waitFor(5L, TimeUnit.SECONDS);
+        if (this.process.isAlive()) {
+          throw new IOException(
+            "Container process %s is still alive!".formatted(this.process)
+          );
+        }
+      } finally {
+        mdcPop();
+      }
+    }
+
+    @Override
+    public void start()
+      throws IOException, InterruptedException
+    {
+      try {
+        this.mdcPush();
+
+        final var startArgs = new ArrayList<String>();
+        startArgs.add(this.configuration.podmanExecutable());
+        startArgs.add("start");
+        startArgs.add("--interactive");
+        startArgs.add("--attach");
+        startArgs.add(this.name);
+
+        this.process = this.supervisor.executeLogged(
+          Optional.of(this.name),
+          "start",
+          startArgs,
+          IGNORING
+        );
+
+        this.waitUntilReady();
+      } finally {
+        mdcPop();
+      }
+    }
+
+    @Override
+    public void close()
+      throws Exception
+    {
+      try {
+        this.mdcPush();
+
+        LOG.debug("Shutting down.");
+        final var rmArgs = new ArrayList<String>(6);
+        rmArgs.add(this.configuration.podmanExecutable());
+        rmArgs.add("rm");
+        rmArgs.add("-f");
+        rmArgs.add("--ignore");
+        rmArgs.add("--time");
+        rmArgs.add("1");
+        rmArgs.add(this.name);
+
+        final var rmProc =
+          this.supervisor.executeLogged(
+            Optional.of(this.name),
+            "rm",
+            rmArgs,
+            IGNORING
+          );
 
         try {
-          MDC.pushByKey("PID", Long.toUnsignedString(stopProc.pid()));
+          MDC.pushByKey("PID", Long.toUnsignedString(rmProc.pid()));
           LOG.debug("Waiting for 'stop' invocation.");
-          stopProc.waitFor(10L, TimeUnit.SECONDS);
-          LOG.debug("Status {}", stopProc);
+          rmProc.waitFor(10L, TimeUnit.SECONDS);
+          LOG.debug("Status {}", rmProc);
         } finally {
           MDC.popByKey("PID");
         }
@@ -627,9 +811,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           LOG.warn("Container appears to still be running!");
         }
       } finally {
-        MDC.remove("Container");
-        MDC.remove("PID");
-        MDC.remove("Source");
+        mdcPop();
       }
     }
   }
