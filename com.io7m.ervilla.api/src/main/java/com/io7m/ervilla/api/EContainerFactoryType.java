@@ -14,16 +14,28 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package com.io7m.ervilla.tests;
+
+package com.io7m.ervilla.api;
+
+import java.io.IOException;
 
 /**
- * Nothing.
+ * A factory of containers.
  */
 
-public final class Empty
+public interface EContainerFactoryType
 {
-  private Empty()
-  {
+  /**
+   * Start a new container.
+   *
+   * @param spec The container spec
+   *
+   * @return A running container
+   *
+   * @throws IOException          On errors
+   * @throws InterruptedException On interruption
+   */
 
-  }
+  EContainerType start(EContainerSpec spec)
+    throws IOException, InterruptedException;
 }

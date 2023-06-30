@@ -14,13 +14,32 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+package com.io7m.ervilla.api;
+
+import java.nio.file.Path;
+import java.util.Objects;
+
 /**
- * Podman testing service (Test suite)
+ * Mount a host file or directory at the given location in the container.
+ *
+ * @param hostPath      The path on the host
+ * @param containerPath The path inside the container
  */
 
-@Export
-@Version("1.0.0")
-package com.io7m.ervilla.tests;
+public record EVolumeMount(
+  Path hostPath,
+  String containerPath)
+{
+  /**
+   * Mount a host file or directory at the given location in the container.
+   *
+   * @param hostPath      The path on the host
+   * @param containerPath The path inside the container
+   */
 
-import org.osgi.annotation.bundle.Export;
-import org.osgi.annotation.versioning.Version;
+  public EVolumeMount
+  {
+    Objects.requireNonNull(hostPath, "hostPath");
+    Objects.requireNonNull(containerPath, "containerPath");
+  }
+}

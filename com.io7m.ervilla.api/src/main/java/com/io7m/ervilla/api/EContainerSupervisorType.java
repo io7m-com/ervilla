@@ -17,24 +17,28 @@
 package com.io7m.ervilla.api;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * A container supervisor.
  */
 
 public interface EContainerSupervisorType
-  extends AutoCloseable
+  extends AutoCloseable, EContainerFactoryType
 {
   /**
-   * Start a new container.
+   * Create a new pod.
    *
-   * @param spec The container spec
+   * @param ports The ports that will be published from within the pod to the host
    *
-   * @return A running container
+   * @return A new pod
    *
-   * @throws IOException On errors
+   * @throws IOException          On errors
+   * @throws InterruptedException On interruption
+   * @see "podman-pod-create"
    */
 
-  EContainerType start(EContainerSpec spec)
+  EContainerFactoryType createPod(
+    List<EPortPublish> ports)
     throws IOException, InterruptedException;
 }

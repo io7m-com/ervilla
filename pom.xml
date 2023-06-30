@@ -8,12 +8,12 @@
   <parent>
     <groupId>com.io7m.primogenitor</groupId>
     <artifactId>com.io7m.primogenitor.full</artifactId>
-    <version>7.7.0</version>
+    <version>8.0.0-beta0001</version>
   </parent>
 
   <groupId>com.io7m.ervilla</groupId>
   <artifactId>com.io7m.ervilla</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.ervilla</name>
@@ -31,7 +31,7 @@
   <properties>
     <com.io7m.quarrel.version>1.2.0</com.io7m.quarrel.version>
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
-    <io7m.api.previousVersion>0.0.2</io7m.api.previousVersion>
+    <io7m.api.previousVersion>0.0.3</io7m.api.previousVersion>
     <jqwik.version>1.7.3</jqwik.version>
     <junit.version>5.9.3</junit.version>
   </properties>
@@ -115,7 +115,7 @@
       <dependency>
         <groupId>com.io7m.primogenitor</groupId>
         <artifactId>com.io7m.primogenitor.support</artifactId>
-        <version>7.7.0</version>
+        <version>8.0.0-beta0001</version>
       </dependency>
       <dependency>
         <groupId>org.osgi</groupId>

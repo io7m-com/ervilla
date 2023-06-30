@@ -26,14 +26,15 @@ import java.util.Optional;
 /**
  * Parameters needed to start a container.
  *
- * @param registry    The container registry (such as "quay.io")
- * @param imageName   The image name (such as "io7mcom/idstore")
- * @param imageTag    The image tag (such as "1.0.0-beta0013")
- * @param imageHash   The image hash (such as "sha256:ab38fabce3")
- * @param ports       The set of ports to publish
- * @param environment The set of environment variables
- * @param arguments   The entrypoint arguments
- * @param readyCheck The check used to determine if the container is ready
+ * @param registry     The container registry (such as "quay.io")
+ * @param imageName    The image name (such as "io7mcom/idstore")
+ * @param imageTag     The image tag (such as "1.0.0-beta0013")
+ * @param imageHash    The image hash (such as "sha256:ab38fabce3")
+ * @param ports        The set of ports to publish
+ * @param environment  The set of environment variables
+ * @param arguments    The entrypoint arguments
+ * @param volumeMounts The set of volume mounts
+ * @param readyCheck   The check used to determine if the container is ready
  */
 
 public record EContainerSpec(
@@ -44,19 +45,21 @@ public record EContainerSpec(
   List<EPortPublish> ports,
   Map<String, String> environment,
   List<String> arguments,
+  List<EVolumeMount> volumeMounts,
   EReadyCheckType readyCheck)
 {
   /**
    * Parameters needed to start a container.
    *
-   * @param registry    The container registry (such as "quay.io")
-   * @param imageName   The image name (such as "io7mcom/idstore")
-   * @param imageTag    The image tag (such as "1.0.0-beta0013")
-   * @param imageHash   The image hash (such as "sha256:ab38fabce3")
-   * @param ports       The set of ports to publish
-   * @param environment The set of environment variables
-   * @param arguments   The entrypoint arguments
-   * @param readyCheck  A check used to determine if the container is ready
+   * @param registry     The container registry (such as "quay.io")
+   * @param imageName    The image name (such as "io7mcom/idstore")
+   * @param imageTag     The image tag (such as "1.0.0-beta0013")
+   * @param imageHash    The image hash (such as "sha256:ab38fabce3")
+   * @param ports        The set of ports to publish
+   * @param environment  The set of environment variables
+   * @param arguments    The entrypoint arguments
+   * @param volumeMounts The set of volume mounts
+   * @param readyCheck   A check used to determine if the container is ready
    */
 
   public EContainerSpec
@@ -69,6 +72,7 @@ public record EContainerSpec(
     Objects.requireNonNull(ports, "ports");
     Objects.requireNonNull(registry, "registry");
     Objects.requireNonNull(readyCheck, "readyCheck");
+    Objects.requireNonNull(volumeMounts, "volumeMounts");
   }
 
   /**
@@ -118,6 +122,7 @@ public record EContainerSpec(
     private final List<EPortPublish> ports;
     private final Map<String, String> environment;
     private final List<String> arguments;
+    private final List<EVolumeMount> volumeMounts;
 
     Builder(
       final String inRegistry,
@@ -139,8 +144,26 @@ public record EContainerSpec(
         new HashMap<>();
       this.arguments =
         new ArrayList<>();
+      this.volumeMounts =
+        new ArrayList<>();
       this.readyCheck =
         EReadyChecks.assumeAlwaysReady();
+    }
+
+    /**
+     * Add a volume mount.
+     *
+     * @param volumeMount The volume mount
+     *
+     * @return this
+     */
+
+    public Builder addVolumeMount(
+      final EVolumeMount volumeMount)
+    {
+      this.volumeMounts.add(
+        Objects.requireNonNull(volumeMount, "volumeMount"));
+      return this;
     }
 
     /**
@@ -234,9 +257,10 @@ public record EContainerSpec(
         this.imageName,
         this.imageTag,
         this.imageHash,
-        this.ports,
-        this.environment,
-        this.arguments,
+        List.copyOf(this.ports),
+        Map.copyOf(this.environment),
+        List.copyOf(this.arguments),
+        List.copyOf(this.volumeMounts),
         this.readyCheck
       );
     }

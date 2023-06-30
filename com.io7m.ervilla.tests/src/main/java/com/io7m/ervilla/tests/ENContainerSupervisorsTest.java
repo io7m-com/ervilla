@@ -19,6 +19,7 @@ package com.io7m.ervilla.tests;
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EPortPublish;
+import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
 import com.io7m.ervilla.postgres.EPgSpecs;
 import org.junit.jupiter.api.Assumptions;
@@ -82,7 +83,8 @@ public final class ENContainerSupervisorsTest
   }
 
   @Test
-  public void testRun0()
+  public void testRun0(
+    final @TempDir Path directory)
     throws Exception
   {
     final var supervisors =
@@ -119,11 +121,67 @@ public final class ENContainerSupervisorsTest
             .addEnvironmentVariable("ENV_0", "x")
             .addEnvironmentVariable("ENV_1", "y")
             .addEnvironmentVariable("ENV_2", "z")
+            .addVolumeMount(new EVolumeMount(directory, "/x"))
             .addArgument("help")
             .addArgument("version")
             .build()
         );
       assertTrue(c.name().startsWith("ERVILLA-"));
+    }
+  }
+
+  @Test
+  public void testRunPod0(
+    final @TempDir Path directory)
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(EContainerConfiguration.defaults())
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults())) {
+
+      final var pod =
+        supervisor.createPod(
+          List.of(
+            new EPortPublish(
+              Optional.empty(),
+              5432,
+              5432,
+              TCP
+            )
+          )
+        );
+
+      pod.start(
+        EPgSpecs.builderFromDockerIO(
+          "15.3-alpine3.18",
+          Optional.empty(),
+          5432,
+          "db-xyz",
+          "db-user",
+          "db-password"
+        ).build()
+      );
+
+      pod.start(
+        EContainerSpec.builder(
+            "docker.io",
+            "busybox",
+            "1.36.1-musl"
+          )
+          .addArgument("nc")
+          .addArgument("-v")
+          .addArgument("-z")
+          .addArgument("localhost")
+          .addArgument("5432")
+          .build()
+      );
     }
   }
 
@@ -166,6 +224,56 @@ public final class ENContainerSupervisorsTest
 
       assertEquals("HELLO!", Files.readString(fileOut));
       assertTrue(c.name().startsWith("ERVILLA-"));
+
+      c.stop();
+      c.start();
+      c.stop();
+      c.start();
+    }
+  }
+
+  @Test
+  public void testRunStopStart()
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(EContainerConfiguration.defaults())
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults())) {
+      final var c =
+        supervisor.start(
+          EPgSpecs.builderFromDockerIO(
+            "15.3-alpine3.18",
+            Optional.of("[::]"),
+            5432,
+            "db-xyz",
+            "db-user",
+            "db-password"
+          ).build()
+        );
+
+      LOG.debug("### STOP!");
+      c.stop();
+      LOG.debug("### START!");
+      c.start();
+      LOG.debug("### STOP!");
+      c.stop();
+      LOG.debug("### START!");
+      c.start();
+
+      final var e =
+        c.executeAndWaitIndefinitely(List.of(
+          "psql",
+          "--help"
+        ));
+
+      assertEquals(0, e);
     }
   }
 }

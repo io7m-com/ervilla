@@ -98,4 +98,26 @@ public interface EContainerType extends AutoCloseable
     String source,
     Path destination)
     throws InterruptedException, IOException;
+
+  /**
+   * Stop the container but do not destroy it. The container can be started
+   * again with {@link #start()}.
+   *
+   * @throws InterruptedException On interruption
+   * @throws IOException          On errors
+   */
+
+  void stop()
+    throws InterruptedException, IOException;
+
+  /**
+   * Start the container. This is only useful after a {@link #stop()} as
+   * containers are automatically started up when created.
+   *
+   * @throws InterruptedException On interruption
+   * @throws IOException          On errors
+   */
+
+  void start()
+    throws InterruptedException, IOException;
 }
