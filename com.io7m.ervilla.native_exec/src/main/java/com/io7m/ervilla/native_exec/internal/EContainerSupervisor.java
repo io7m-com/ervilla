@@ -354,6 +354,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       createArgs.add("--publish");
       createArgs.add(portSpec(port));
     }
+    createArgs.add("--name");
     createArgs.add(podName);
 
     final var createProc =
@@ -777,32 +778,14 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       try {
         this.mdcPush();
 
+        /*
+         * Podman 4.* above support removing (with force) in one operation.
+         * Older versions require stopping and then removing.
+         */
+
         LOG.debug("Shutting down.");
-        final var rmArgs = new ArrayList<String>(6);
-        rmArgs.add(this.configuration.podmanExecutable());
-        rmArgs.add("rm");
-        rmArgs.add("-f");
-        rmArgs.add("--ignore");
-        rmArgs.add("--time");
-        rmArgs.add("1");
-        rmArgs.add(this.name);
-
-        final var rmProc =
-          this.supervisor.executeLogged(
-            Optional.of(this.name),
-            "rm",
-            rmArgs,
-            IGNORING
-          );
-
-        try {
-          MDC.pushByKey("PID", Long.toUnsignedString(rmProc.pid()));
-          LOG.debug("Waiting for 'stop' invocation.");
-          rmProc.waitFor(10L, TimeUnit.SECONDS);
-          LOG.debug("Status {}", rmProc);
-        } finally {
-          MDC.popByKey("PID");
-        }
+        this.closeStop();
+        this.closeRemove();
 
         LOG.debug("Waiting for container shutdown.");
         this.process.waitFor(10L, TimeUnit.SECONDS);
@@ -812,6 +795,63 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         }
       } finally {
         mdcPop();
+      }
+    }
+
+    private void closeStop()
+      throws IOException, InterruptedException
+    {
+      final var closeArgs = new ArrayList<String>(6);
+      closeArgs.add(this.configuration.podmanExecutable());
+      closeArgs.add("stop");
+      closeArgs.add("--ignore");
+      closeArgs.add("--time");
+      closeArgs.add("1");
+      closeArgs.add(this.name);
+
+      final var stopProc =
+        this.supervisor.executeLogged(
+          Optional.of(this.name),
+          "close",
+          closeArgs,
+          IGNORING
+        );
+
+      try {
+        MDC.pushByKey("PID", Long.toUnsignedString(stopProc.pid()));
+        LOG.debug("Waiting for 'close' invocation.");
+        stopProc.waitFor(3L, TimeUnit.SECONDS);
+        LOG.debug("Status {}", stopProc);
+      } finally {
+        MDC.popByKey("PID");
+      }
+    }
+
+    private void closeRemove()
+      throws IOException, InterruptedException
+    {
+      final var rmArgs = new ArrayList<String>(6);
+      rmArgs.add(this.configuration.podmanExecutable());
+      rmArgs.add("rm");
+      rmArgs.add("-f");
+      rmArgs.add("--ignore");
+      rmArgs.add(this.name);
+
+      final var rmProc =
+        this.supervisor.executeLogged(
+          Optional.of(this.name),
+          "rm",
+          rmArgs,
+          IGNORING
+        );
+
+      try {
+        MDC.pushByKey("PID", Long.toUnsignedString(rmProc.pid()));
+        LOG.debug("Waiting for 'rm' invocation.");
+        rmProc.waitFor(3L, TimeUnit.SECONDS);
+        LOG.debug("Status {}", rmProc);
+      } finally {
+        MDC.popByKey("PID");
       }
     }
   }
