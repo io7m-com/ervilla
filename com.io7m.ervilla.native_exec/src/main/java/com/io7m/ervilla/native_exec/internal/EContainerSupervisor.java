@@ -836,6 +836,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       rmArgs.add(this.configuration.podmanExecutable());
       rmArgs.add("rm");
       rmArgs.add("-f");
+      rmArgs.add("--volumes");
       rmArgs.add("--ignore");
       rmArgs.add(this.name);
 

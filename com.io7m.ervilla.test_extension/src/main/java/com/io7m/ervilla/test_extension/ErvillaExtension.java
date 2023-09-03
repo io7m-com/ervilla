@@ -57,6 +57,7 @@ public final class ErvillaExtension
 
   private final ArrayList<EContainerSupervisorType> supervisorsPerTest;
   private final ArrayList<EContainerSupervisorType> supervisorsPerClass;
+  private Optional<EContainerSupervisorType> supervisorPerSuite;
 
   /**
    * The Ervilla test extension.
@@ -68,6 +69,8 @@ public final class ErvillaExtension
       new ArrayList<>();
     this.supervisorsPerClass =
       new ArrayList<>();
+    this.supervisorPerSuite =
+      Optional.empty();
   }
 
   /**
@@ -239,11 +242,35 @@ public final class ErvillaExtension
 
     if (Objects.equals(requiredType, EContainerSupervisorType.class)) {
       try {
-        final var supervisor =
-          supervisorCreate(extensionContext).orElseThrow();
+        final var afterClassOpt =
+          parameterContext.findAnnotation(ErvillaCloseAfterClass.class);
+        final var afterSuiteOpt =
+          parameterContext.findAnnotation(ErvillaCloseAfterSuite.class);
 
-        if (parameterContext.findAnnotation(ErvillaCloseAfterAll.class).isPresent()) {
+        if (afterClassOpt.isPresent() && afterSuiteOpt.isPresent()) {
+          throw new ParameterResolutionException(
+            "Specifying both %s and %s is not allowed."
+              .formatted(
+                ErvillaCloseAfterClass.class,
+                ErvillaCloseAfterSuite.class
+              )
+          );
+        }
+
+        if (afterSuiteOpt.isPresent()) {
+          if (this.supervisorPerSuite.isPresent()) {
+            return this.supervisorPerSuite.get();
+          }
+        }
+
+        final var supervisor =
+          supervisorCreate(extensionContext)
+            .orElseThrow();
+
+        if (afterClassOpt.isPresent()) {
           this.supervisorsPerClass.add(supervisor);
+        } else if (afterSuiteOpt.isPresent()) {
+          this.supervisorPerSuite = Optional.of(supervisor);
         } else {
           this.supervisorsPerTest.add(supervisor);
         }
@@ -263,6 +290,11 @@ public final class ErvillaExtension
   public void afterAll(
     final ExtensionContext context)
   {
+    LOG.debug(
+      "Closing {} per-class supervisors.",
+      Integer.valueOf(this.supervisorsPerClass.size())
+    );
+
     for (final var supervisor : this.supervisorsPerClass) {
       try {
         supervisor.close();
@@ -278,6 +310,11 @@ public final class ErvillaExtension
   public void afterEach(
     final ExtensionContext context)
   {
+    LOG.debug(
+      "Closing {} per-test supervisors.",
+      Integer.valueOf(this.supervisorsPerTest.size())
+    );
+
     for (final var supervisor : this.supervisorsPerTest) {
       try {
         supervisor.close();
@@ -295,6 +332,21 @@ public final class ErvillaExtension
     throws Exception
   {
     supervisorFailBasedOnSupportAppropriately(context);
+
+    context.getRoot()
+      .getStore(GLOBAL)
+      .put("Ervilla", (AfterSuiteType) () -> {
+        this.supervisorPerSuite.ifPresent(supervisor -> {
+          LOG.debug("Closing per-suite supervisor.");
+
+          try {
+            supervisor.close();
+          } catch (final Exception e) {
+            LOG.error("Error closing supervisor: ", e);
+          }
+        });
+        this.supervisorPerSuite = Optional.empty();
+      });
   }
 
   @Override
@@ -303,5 +355,11 @@ public final class ErvillaExtension
   {
     context.getStore(GLOBAL)
       .put(ErvillaExtension.class.getCanonicalName(), this);
+  }
+
+  private interface AfterSuiteType
+    extends ExtensionContext.Store.CloseableResource
+  {
+
   }
 }

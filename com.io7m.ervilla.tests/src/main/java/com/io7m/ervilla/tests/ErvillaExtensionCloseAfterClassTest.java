@@ -21,7 +21,7 @@ import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
 import com.io7m.ervilla.api.EPortPublish;
-import com.io7m.ervilla.test_extension.ErvillaCloseAfterAll;
+import com.io7m.ervilla.test_extension.ErvillaCloseAfterClass;
 import com.io7m.ervilla.test_extension.ErvillaConfiguration;
 import com.io7m.ervilla.test_extension.ErvillaExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,14 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(ErvillaExtension.class)
 @ErvillaConfiguration(disabledIfUnsupported = true)
-public final class ErvillaExtensionCloseAfterAllTest
+public final class ErvillaExtensionCloseAfterClassTest
 {
   private static HashSet<String> NAMES = new HashSet<>();
   private static EContainerType CONTAINER;
 
   @BeforeAll
   public static void beforeAll(
-    final @ErvillaCloseAfterAll EContainerSupervisorType supervisor)
+    final @ErvillaCloseAfterClass EContainerSupervisorType supervisor)
     throws IOException, InterruptedException
   {
     CONTAINER =
