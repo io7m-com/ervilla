@@ -26,8 +26,9 @@ module com.io7m.ervilla.test_extension
   requires com.io7m.ervilla.native_exec;
   requires com.io7m.ervilla.api;
 
-  requires org.slf4j;
+  requires com.io7m.lanark.core;
   requires org.junit.jupiter.api;
+  requires org.slf4j;
 
   exports com.io7m.ervilla.test_extension;
 }

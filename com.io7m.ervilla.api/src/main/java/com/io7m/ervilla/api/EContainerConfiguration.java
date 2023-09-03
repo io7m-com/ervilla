@@ -17,25 +17,32 @@
 
 package com.io7m.ervilla.api;
 
+import com.io7m.lanark.core.RDottedName;
+
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
  * The container configuration.
  *
+ * @param projectName         The project name
  * @param podmanExecutable    The podman executable
  * @param startupWaitTime     The startup wait time
  * @param startupWaitTimeUnit The startup wait time unit
  */
 
 public record EContainerConfiguration(
+  RDottedName projectName,
   String podmanExecutable,
   long startupWaitTime,
   TimeUnit startupWaitTimeUnit)
 {
+
+
   /**
    * The container configuration.
    *
+   * @param projectName         The project name
    * @param podmanExecutable    The podman executable
    * @param startupWaitTime     The startup wait time
    * @param startupWaitTimeUnit The startup wait time unit
@@ -43,17 +50,22 @@ public record EContainerConfiguration(
 
   public EContainerConfiguration
   {
+    Objects.requireNonNull(projectName, "projectName");
     Objects.requireNonNull(podmanExecutable, "podmanExecutable");
     Objects.requireNonNull(startupWaitTimeUnit, "startupWaitTimeUnit");
   }
 
   /**
+   * @param projectName The project name
+   *
    * @return The default configuration
    */
 
-  public static EContainerConfiguration defaults()
+  public static EContainerConfiguration defaults(
+    final RDottedName projectName)
   {
     return new EContainerConfiguration(
+      projectName,
       "podman",
       30L,
       TimeUnit.SECONDS

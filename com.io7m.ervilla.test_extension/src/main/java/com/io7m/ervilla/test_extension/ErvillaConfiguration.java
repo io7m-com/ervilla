@@ -31,6 +31,12 @@ import java.util.concurrent.TimeUnit;
 public @interface ErvillaConfiguration
 {
   /**
+   * @return The project name
+   */
+
+  String projectName();
+
+  /**
    * @return The podman executable used
    */
 

@@ -122,6 +122,16 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     );
   }
 
+  private static String volumeSpec(
+    final EVolumeMount mount)
+  {
+    return String.format(
+      "%s:%s",
+      mount.hostPath().toAbsolutePath(),
+      mount.containerPath()
+    );
+  }
+
   private String freshToken()
   {
     final var data = new byte[9];
@@ -195,7 +205,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       MDC.put("Source", "supervisor");
 
       final var uniqueName =
-        "ERVILLA-%s".formatted(this.freshToken());
+        this.createFreshContainerName();
 
       final var arguments = new ArrayList<String>();
       arguments.add(this.configuration.podmanExecutable());
@@ -260,13 +270,11 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     }
   }
 
-  private static String volumeSpec(
-    final EVolumeMount mount)
+  private String createFreshContainerName()
   {
-    return String.format(
-      "%s:%s",
-      mount.hostPath().toAbsolutePath(),
-      mount.containerPath()
+    return "ERVILLA-%s-%s".formatted(
+      this.configuration.projectName(),
+      this.freshToken()
     );
   }
 
@@ -344,7 +352,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     throws IOException, InterruptedException
   {
     final var podName =
-      "ERVILLA-POD-%s".formatted(this.freshToken());
+      this.createFreshPodName();
     final var pod =
       new EPod(podName, this);
 
@@ -376,6 +384,14 @@ public final class EContainerSupervisor implements EContainerSupervisorType
 
     this.pods.put(podName, pod);
     return pod;
+  }
+
+  private String createFreshPodName()
+  {
+    return "ERVILLA-POD-%s-%s".formatted(
+      this.configuration.projectName(),
+      this.freshToken()
+    );
   }
 
   private static final class EPod
@@ -438,10 +454,10 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     implements EContainerType
   {
     private final String name;
-    private volatile Process process;
     private final EContainerSupervisor supervisor;
     private final EContainerConfiguration configuration;
     private final EContainerSpec spec;
+    private volatile Process process;
 
     private EContainer(
       final EContainerSupervisor inSupervisor,
@@ -460,6 +476,13 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         Objects.requireNonNull(inName, "name");
       this.process =
         Objects.requireNonNull(inProcess, "process");
+    }
+
+    private static void mdcPop()
+    {
+      MDC.remove("Container");
+      MDC.remove("PID");
+      MDC.remove("Source");
     }
 
     /**
@@ -696,13 +719,6 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       } finally {
         mdcPop();
       }
-    }
-
-    private static void mdcPop()
-    {
-      MDC.remove("Container");
-      MDC.remove("PID");
-      MDC.remove("Source");
     }
 
     private void mdcPush()

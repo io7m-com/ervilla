@@ -36,7 +36,7 @@ import static com.io7m.ervilla.api.EPortProtocol.TCP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(ErvillaExtension.class)
-@ErvillaConfiguration(disabledIfUnsupported = true)
+@ErvillaConfiguration(projectName = "com.io7m.ervilla", disabledIfUnsupported = true)
 public final class ErvillaExtensionCloseAfterClassTest
 {
   private static HashSet<String> NAMES = new HashSet<>();

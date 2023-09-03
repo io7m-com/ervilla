@@ -22,6 +22,7 @@ import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
 import com.io7m.ervilla.postgres.EPgSpecs;
+import com.io7m.lanark.core.RDottedName;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -42,6 +43,8 @@ public final class ENContainerSupervisorsTest
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(ENContainerSupervisorsTest.class);
+  private static final RDottedName PROJECT_NAME =
+    new RDottedName("com.io7m.ervilla");
 
   @Test
   public void testIsSupported()
@@ -50,7 +53,7 @@ public final class ENContainerSupervisorsTest
     final var supervisors =
       new ENContainerSupervisors();
     final var support =
-      supervisors.isSupported(EContainerConfiguration.defaults());
+      supervisors.isSupported(EContainerConfiguration.defaults(PROJECT_NAME));
 
     if (support.isPresent()) {
       final var s = support.get();
@@ -74,6 +77,7 @@ public final class ENContainerSupervisorsTest
     final var support =
       supervisors.isSupported(
         new EContainerConfiguration(
+          PROJECT_NAME,
           "THIS-DOES-NOT-EXIST",
           30L,
           TimeUnit.SECONDS)
@@ -91,12 +95,13 @@ public final class ENContainerSupervisorsTest
       new ENContainerSupervisors();
 
     Assumptions.assumeTrue(
-      supervisors.isSupported(EContainerConfiguration.defaults())
+      supervisors.isSupported(
+        EContainerConfiguration.defaults(PROJECT_NAME))
         .isPresent()
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults())) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
       final var c =
         supervisor.start(
           EContainerSpec.builder(
@@ -139,12 +144,12 @@ public final class ENContainerSupervisorsTest
       new ENContainerSupervisors();
 
     Assumptions.assumeTrue(
-      supervisors.isSupported(EContainerConfiguration.defaults())
+      supervisors.isSupported(EContainerConfiguration.defaults(PROJECT_NAME))
         .isPresent()
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults())) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
 
       final var pod =
         supervisor.createPod(
@@ -194,12 +199,12 @@ public final class ENContainerSupervisorsTest
       new ENContainerSupervisors();
 
     Assumptions.assumeTrue(
-      supervisors.isSupported(EContainerConfiguration.defaults())
+      supervisors.isSupported(EContainerConfiguration.defaults(PROJECT_NAME))
         .isPresent()
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults())) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
@@ -240,12 +245,12 @@ public final class ENContainerSupervisorsTest
       new ENContainerSupervisors();
 
     Assumptions.assumeTrue(
-      supervisors.isSupported(EContainerConfiguration.defaults())
+      supervisors.isSupported(EContainerConfiguration.defaults(PROJECT_NAME))
         .isPresent()
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults())) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(

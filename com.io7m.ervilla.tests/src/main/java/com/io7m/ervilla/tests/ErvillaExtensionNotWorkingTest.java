@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ErvillaExtension.class)
 @ErvillaConfiguration(
+  projectName = "com.io7m.ervilla",
   disabledIfUnsupported = true,
   podmanExecutable = "THIS-IS-NOT-AN-EXECUTABLE-AND-WILL-NOT-WORK"
 )

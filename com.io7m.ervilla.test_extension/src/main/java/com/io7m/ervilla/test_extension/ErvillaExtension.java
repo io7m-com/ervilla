@@ -20,6 +20,7 @@ import com.io7m.ervilla.api.EContainerBackend;
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
+import com.io7m.lanark.core.RDottedName;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -155,9 +156,12 @@ public final class ErvillaExtension
 
     final EContainerConfiguration configuration;
     if (annotation == null) {
-      configuration = EContainerConfiguration.defaults();
+      configuration = EContainerConfiguration.defaults(
+        new RDottedName(annotation.projectName())
+      );
     } else {
       configuration = new EContainerConfiguration(
+        new RDottedName(annotation.projectName()),
         annotation.podmanExecutable(),
         annotation.startupWaitTime(),
         annotation.startupWaitTimeUnit()

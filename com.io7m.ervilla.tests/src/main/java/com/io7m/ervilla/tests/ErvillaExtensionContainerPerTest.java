@@ -34,7 +34,7 @@ import static com.io7m.ervilla.api.EPortProtocol.TCP;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(ErvillaExtension.class)
-@ErvillaConfiguration(disabledIfUnsupported = true)
+@ErvillaConfiguration(projectName = "com.io7m.ervilla", disabledIfUnsupported = true)
 public final class ErvillaExtensionContainerPerTest
 {
   private EContainerType container;
