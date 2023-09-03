@@ -78,9 +78,9 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     this.configuration =
       Objects.requireNonNull(inConfiguration, "configuration");
     this.containers =
-      new HashMap<String, EContainer>();
+      new HashMap<>();
     this.pods =
-      new HashMap<String, EPod>();
+      new HashMap<>();
 
     this.ioSupervisor =
       Executors.newCachedThreadPool(r -> {
@@ -143,22 +143,24 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       MDC.put("PID", "*");
       MDC.put("Source", "supervisor");
 
-      LOG.debug("Shutting down containers.");
-      final var exceptions = new ExceptionTracker<Exception>();
-      for (final var entry : this.containers.entrySet()) {
-        try {
-          final var container = entry.getValue();
-          container.close();
-        } catch (final Exception e) {
-          exceptions.addException(e);
-        }
-      }
+      final var exceptions =
+        new ExceptionTracker<Exception>();
 
       LOG.debug("Shutting down pods.");
       for (final var entry : this.pods.entrySet()) {
         try {
           final var pod = entry.getValue();
           pod.close();
+        } catch (final Exception e) {
+          exceptions.addException(e);
+        }
+      }
+
+      LOG.debug("Shutting down containers.");
+      for (final var entry : this.containers.entrySet()) {
+        try {
+          final var container = entry.getValue();
+          container.close();
         } catch (final Exception e) {
           exceptions.addException(e);
         }
