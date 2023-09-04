@@ -41,10 +41,13 @@ public interface EContainerSupervisorFactoryType
    * Create a container supervisor.
    *
    * @param configuration The configuration
+   * @param scope         The intended supervisor scope
    *
    * @return A container supervisor
    */
 
   EContainerSupervisorType create(
-    EContainerConfiguration configuration);
+    EContainerConfiguration configuration,
+    EContainerSupervisorScope scope)
+    throws Exception;
 }

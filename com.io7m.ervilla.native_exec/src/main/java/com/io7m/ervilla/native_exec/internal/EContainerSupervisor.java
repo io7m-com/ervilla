@@ -18,7 +18,9 @@ package com.io7m.ervilla.native_exec.internal;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerFactoryType;
+import com.io7m.ervilla.api.EContainerReference;
 import com.io7m.ervilla.api.EContainerSpec;
+import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
 import com.io7m.ervilla.api.EPortPublish;
@@ -40,9 +42,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -61,40 +63,134 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     };
 
   private final EContainerConfiguration configuration;
+  private final EContainerStore store;
+  private final Consumer<EContainerSupervisor> onClose;
   private final HashMap<String, EContainer> containers;
   private final HashMap<String, EPod> pods;
   private final ExecutorService ioSupervisor;
+  private final UUID id;
+  private final EContainerSupervisorScope scope;
   private final SecureRandom rng;
 
   /**
    * A container supervisor.
    *
    * @param inConfiguration The container configuration
+   * @param inStore         The container store
+   * @param inOnClose       The on-close function
+   * @param inId            The supervisor ID
+   * @param inScope         The supervisor scope
    */
 
-  public EContainerSupervisor(
-    final EContainerConfiguration inConfiguration)
+  private EContainerSupervisor(
+    final EContainerConfiguration inConfiguration,
+    final EContainerStore inStore,
+    final ExecutorService inExecutor,
+    final Consumer<EContainerSupervisor> inOnClose,
+    final UUID inId,
+    final EContainerSupervisorScope inScope)
   {
     this.configuration =
       Objects.requireNonNull(inConfiguration, "configuration");
+    this.store =
+      Objects.requireNonNull(inStore, "store");
+    this.onClose =
+      Objects.requireNonNull(inOnClose, "onClose");
+    this.ioSupervisor =
+      Objects.requireNonNull(inExecutor, "inExecutor");
+    this.id =
+      Objects.requireNonNull(inId, "id");
+    this.scope =
+      Objects.requireNonNull(inScope, "scope");
+
     this.containers =
       new HashMap<>();
     this.pods =
       new HashMap<>();
-
-    this.ioSupervisor =
-      Executors.newCachedThreadPool(r -> {
-        final var thread = new Thread(r);
-        thread.setName("com.io7m.ervilla[%d]".formatted(Long.valueOf(thread.getId())));
-        thread.setDaemon(true);
-        return thread;
-      });
 
     try {
       this.rng = SecureRandom.getInstanceStrong();
     } catch (final NoSuchAlgorithmException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  /**
+   * Create a new supervisor.
+   *
+   * @param inConfiguration The configuration
+   * @param inStore         The container store
+   * @param inExecutor      An executor for I/O operations
+   * @param onClose         The on-close function
+   * @param id              The supervisors instance ID
+   * @param scope           The supervisor scope
+   *
+   * @return A new supervisor
+   */
+
+  public static EContainerSupervisor create(
+    final EContainerConfiguration inConfiguration,
+    final EContainerStore inStore,
+    final ExecutorService inExecutor,
+    final Consumer<EContainerSupervisor> onClose,
+    final UUID id,
+    final EContainerSupervisorScope scope)
+  {
+    return new EContainerSupervisor(
+      inConfiguration,
+      inStore,
+      inExecutor,
+      onClose,
+      id,
+      scope
+    );
+  }
+
+  /**
+   * Clean up all containers and pods that are in the current store.
+   *
+   * @throws Exception On errors
+   */
+
+  public void cleanUpOldContainersAndPods()
+    throws Exception
+  {
+    final var exceptions = new ExceptionTracker<Exception>();
+
+    final var containerNames = this.store.containerList();
+    LOG.debug(
+      "Cleaning up {} old containerNames.",
+      Integer.valueOf(containerNames.size())
+    );
+
+    for (final var container : containerNames) {
+      try {
+        this.executeContainerStop(container.name());
+        this.executeContainerRemove(container.name());
+        this.store.containerDelete(
+          new EContainerReference(container.name(), Optional.empty())
+        );
+      } catch (final Exception e) {
+        exceptions.addException(e);
+      }
+    }
+
+    final var podNames = this.store.podList();
+    LOG.debug(
+      "Cleaning up {} old podNames.",
+      Integer.valueOf(podNames.size())
+    );
+
+    for (final var pod : podNames) {
+      try {
+        this.executePodDeletion(pod);
+        this.store.podDelete(pod);
+      } catch (final Exception e) {
+        exceptions.addException(e);
+      }
+    }
+
+    exceptions.throwIfNecessary();
   }
 
   private static String portSpec(
@@ -176,13 +272,24 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         }
       }
 
-      this.ioSupervisor.shutdown();
-      this.ioSupervisor.awaitTermination(5L, TimeUnit.SECONDS);
+      LOG.debug("Deleting pod records.");
+      for (final var entry : this.pods.entrySet()) {
+        try {
+          final var pod = entry.getValue();
+          this.store.podDelete(pod.name);
+        } catch (final Exception e) {
+          exceptions.addException(e);
+        }
+      }
+
+      this.store.close();
       exceptions.throwIfNecessary();
     } finally {
       MDC.remove("Container");
       MDC.remove("PID");
       MDC.remove("Source");
+
+      this.onClose.accept(this);
     }
   }
 
@@ -206,6 +313,10 @@ public final class EContainerSupervisor implements EContainerSupervisorType
 
       final var uniqueName =
         this.createFreshContainerName();
+
+      this.store.containerPut(
+        new EContainerReference(uniqueName, pod)
+      );
 
       final var arguments = new ArrayList<String>();
       arguments.add(this.configuration.podmanExecutable());
@@ -356,6 +467,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     final var pod =
       new EPod(podName, this);
 
+    this.store.podPut(podName);
+
     final var createArgs = new ArrayList<String>();
     createArgs.add(this.configuration.podmanExecutable());
     createArgs.add("pod");
@@ -394,6 +507,91 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     );
   }
 
+  private void executeContainerRemove(
+    final String name)
+    throws IOException, InterruptedException
+  {
+    final var rmArgs = new ArrayList<String>(6);
+    rmArgs.add(this.configuration.podmanExecutable());
+    rmArgs.add("rm");
+    rmArgs.add("-f");
+    rmArgs.add("--volumes");
+    rmArgs.add("--ignore");
+    rmArgs.add(name);
+
+    final var rmProc =
+      this.executeLogged(
+        Optional.of(name),
+        "rm",
+        rmArgs,
+        IGNORING
+      );
+
+    try {
+      MDC.pushByKey("PID", Long.toUnsignedString(rmProc.pid()));
+      LOG.debug("Waiting for 'rm' invocation.");
+      rmProc.waitFor(3L, TimeUnit.SECONDS);
+      LOG.debug("Status {}", rmProc);
+    } finally {
+      MDC.popByKey("PID");
+    }
+  }
+
+  private void executeContainerStop(
+    final String name)
+    throws IOException, InterruptedException
+  {
+    final var closeArgs = new ArrayList<String>(6);
+    closeArgs.add(this.configuration.podmanExecutable());
+    closeArgs.add("stop");
+    closeArgs.add("--ignore");
+    closeArgs.add("--time");
+    closeArgs.add("1");
+    closeArgs.add(name);
+
+    final var stopProc =
+      this.executeLogged(
+        Optional.of(name),
+        "close",
+        closeArgs,
+        IGNORING
+      );
+
+    try {
+      MDC.pushByKey("PID", Long.toUnsignedString(stopProc.pid()));
+      LOG.debug("Waiting for 'close' invocation.");
+      stopProc.waitFor(3L, TimeUnit.SECONDS);
+      LOG.debug("Status {}", stopProc);
+    } finally {
+      MDC.popByKey("PID");
+    }
+  }
+
+  private void executePodDeletion(
+    final String name)
+    throws IOException, InterruptedException
+  {
+    final var rmArgs = new ArrayList<String>();
+    rmArgs.add(this.configuration.podmanExecutable());
+    rmArgs.add("pod");
+    rmArgs.add("rm");
+    rmArgs.add("-f");
+    rmArgs.add(name);
+
+    final var rmProc =
+      this.executeLogged(
+        Optional.of(name),
+        "pod-rm",
+        rmArgs,
+        IGNORING
+      );
+
+    final int exitCode = rmProc.waitFor();
+    if (exitCode != 0) {
+      throw new IOException("Could not remove pod.");
+    }
+  }
+
   private static final class EPod
     implements EContainerFactoryType, AutoCloseable
   {
@@ -425,28 +623,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     public void close()
       throws IOException, InterruptedException
     {
-      final var configuration =
-        this.supervisor.configuration;
-
-      final var rmArgs = new ArrayList<String>();
-      rmArgs.add(configuration.podmanExecutable());
-      rmArgs.add("pod");
-      rmArgs.add("rm");
-      rmArgs.add("-f");
-      rmArgs.add(this.name);
-
-      final var rmProc =
-        this.supervisor.executeLogged(
-          Optional.of(this.name),
-          "pod-rm",
-          rmArgs,
-          IGNORING
-        );
-
-      final int exitCode = rmProc.waitFor();
-      if (exitCode != 0) {
-        throw new IOException("Could not remove pod.");
-      }
+      this.supervisor.executePodDeletion(this.name);
     }
   }
 
@@ -735,31 +912,27 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       try {
         this.mdcPush();
 
-        final var stopArgs = new ArrayList<String>();
-        stopArgs.add(this.configuration.podmanExecutable());
-        stopArgs.add("stop");
-        stopArgs.add("-t");
-        stopArgs.add("3");
-        stopArgs.add(this.name);
-
-        final var stopProc =
-          this.supervisor.executeLogged(
-            Optional.of(this.name),
-            "stop",
-            stopArgs,
-            IGNORING
-          );
-        stopProc.waitFor(5L, TimeUnit.SECONDS);
-
+        this.supervisor.executeContainerStop(this.name);
         this.process.waitFor(5L, TimeUnit.SECONDS);
         if (this.process.isAlive()) {
           throw new IOException(
             "Container process %s is still alive!".formatted(this.process)
           );
         }
+
+        this.deleteContainerRecord();
       } finally {
         mdcPop();
       }
+    }
+
+    private void deleteContainerRecord()
+      throws IOException
+    {
+      LOG.debug("Deleting container record.");
+      this.supervisor.store.containerDelete(
+        new EContainerReference(this.name, Optional.empty())
+      );
     }
 
     @Override
@@ -797,13 +970,13 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         this.mdcPush();
 
         /*
-         * Podman 4.* above support removing (with force) in one operation.
+         * Podman 4.* and above supports removing (with force) in one operation.
          * Older versions require stopping and then removing.
          */
 
         LOG.debug("Shutting down.");
-        this.closeStop();
-        this.closeRemove();
+        this.supervisor.executeContainerStop(this.name);
+        this.supervisor.executeContainerRemove(this.name);
 
         LOG.debug("Waiting for container shutdown.");
         this.process.waitFor(10L, TimeUnit.SECONDS);
@@ -811,66 +984,10 @@ public final class EContainerSupervisor implements EContainerSupervisorType
         if (this.process.isAlive()) {
           LOG.warn("Container appears to still be running!");
         }
+
+        this.deleteContainerRecord();
       } finally {
         mdcPop();
-      }
-    }
-
-    private void closeStop()
-      throws IOException, InterruptedException
-    {
-      final var closeArgs = new ArrayList<String>(6);
-      closeArgs.add(this.configuration.podmanExecutable());
-      closeArgs.add("stop");
-      closeArgs.add("--ignore");
-      closeArgs.add("--time");
-      closeArgs.add("1");
-      closeArgs.add(this.name);
-
-      final var stopProc =
-        this.supervisor.executeLogged(
-          Optional.of(this.name),
-          "close",
-          closeArgs,
-          IGNORING
-        );
-
-      try {
-        MDC.pushByKey("PID", Long.toUnsignedString(stopProc.pid()));
-        LOG.debug("Waiting for 'close' invocation.");
-        stopProc.waitFor(3L, TimeUnit.SECONDS);
-        LOG.debug("Status {}", stopProc);
-      } finally {
-        MDC.popByKey("PID");
-      }
-    }
-
-    private void closeRemove()
-      throws IOException, InterruptedException
-    {
-      final var rmArgs = new ArrayList<String>(6);
-      rmArgs.add(this.configuration.podmanExecutable());
-      rmArgs.add("rm");
-      rmArgs.add("-f");
-      rmArgs.add("--volumes");
-      rmArgs.add("--ignore");
-      rmArgs.add(this.name);
-
-      final var rmProc =
-        this.supervisor.executeLogged(
-          Optional.of(this.name),
-          "rm",
-          rmArgs,
-          IGNORING
-        );
-
-      try {
-        MDC.pushByKey("PID", Long.toUnsignedString(rmProc.pid()));
-        LOG.debug("Waiting for 'rm' invocation.");
-        rmProc.waitFor(3L, TimeUnit.SECONDS);
-        LOG.debug("Status {}", rmProc);
-      } finally {
-        MDC.popByKey("PID");
       }
     }
   }

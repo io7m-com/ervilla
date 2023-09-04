@@ -14,29 +14,34 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
+package com.io7m.ervilla.api;
+
 /**
- * Podman testing service (Native implementation)
+ * The intended scope of a container supervisor (and therefore the scope
+ * of the containers it creates).
  */
 
-module com.io7m.ervilla.native_exec
+public enum EContainerSupervisorScope
 {
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+  /**
+   * The containers are started once and closed at the end of the entire
+   * test suite execution run.
+   */
 
-  requires com.io7m.ervilla.api;
+  PER_SUITE,
 
-  requires com.io7m.jade.api;
-  requires com.io7m.jade.vanilla;
-  requires com.io7m.jdeferthrow.core;
-  requires com.io7m.lanark.core;
-  requires com.io7m.trasco.api;
-  requires com.io7m.trasco.vanilla;
-  requires java.sql;
-  requires org.slf4j;
-  requires org.xerial.sqlitejdbc;
+  /**
+   * The containers are created at the start of a set of tests in a test
+   * class, and destroyed at the end of the test class.
+   */
 
-  exports com.io7m.ervilla.native_exec;
+  PER_CLASS,
 
-  exports com.io7m.ervilla.native_exec.internal
-    to com.io7m.ervilla.tests;
+  /**
+   * The containers are created at the start of a test, and destroyed when
+   * the test completes.
+   */
+
+  PER_TEST
 }

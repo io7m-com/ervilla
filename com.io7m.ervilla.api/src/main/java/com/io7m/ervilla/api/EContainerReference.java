@@ -14,29 +14,33 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
+package com.io7m.ervilla.api;
+
+import java.util.Objects;
+import java.util.Optional;
+
 /**
- * Podman testing service (Native implementation)
+ * A reference to a created container.
+ *
+ * @param name The container name
+ * @param pod  The pod name (if the container is in a pod)
  */
 
-module com.io7m.ervilla.native_exec
+public record EContainerReference(
+  String name,
+  Optional<String> pod)
 {
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+  /**
+   * A reference to a created container.
+   *
+   * @param name The container name
+   * @param pod  The pod name (if the container is in a pod)
+   */
 
-  requires com.io7m.ervilla.api;
-
-  requires com.io7m.jade.api;
-  requires com.io7m.jade.vanilla;
-  requires com.io7m.jdeferthrow.core;
-  requires com.io7m.lanark.core;
-  requires com.io7m.trasco.api;
-  requires com.io7m.trasco.vanilla;
-  requires java.sql;
-  requires org.slf4j;
-  requires org.xerial.sqlitejdbc;
-
-  exports com.io7m.ervilla.native_exec;
-
-  exports com.io7m.ervilla.native_exec.internal
-    to com.io7m.ervilla.tests;
+  public EContainerReference
+  {
+    Objects.requireNonNull(name, "name");
+    Objects.requireNonNull(pod, "pod");
+  }
 }

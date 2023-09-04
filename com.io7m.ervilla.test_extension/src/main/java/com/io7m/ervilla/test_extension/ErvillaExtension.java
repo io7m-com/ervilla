@@ -18,8 +18,9 @@ package com.io7m.ervilla.test_extension;
 
 import com.io7m.ervilla.api.EContainerBackend;
 import com.io7m.ervilla.api.EContainerConfiguration;
+import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EContainerSupervisorType;
-import com.io7m.ervilla.native_exec.ENContainerSupervisors;
+import com.io7m.ervilla.test_extension.internal.ErvillaSingletons;
 import com.io7m.lanark.core.RDottedName;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -53,12 +54,9 @@ public final class ErvillaExtension
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(ErvillaExtension.class);
-  private static final ENContainerSupervisors SUPERVISORS =
-    new ENContainerSupervisors();
 
   private final ArrayList<EContainerSupervisorType> supervisorsPerTest;
   private final ArrayList<EContainerSupervisorType> supervisorsPerClass;
-  private Optional<EContainerSupervisorType> supervisorPerSuite;
 
   /**
    * The Ervilla test extension.
@@ -70,8 +68,6 @@ public final class ErvillaExtension
       new ArrayList<>();
     this.supervisorsPerClass =
       new ArrayList<>();
-    this.supervisorPerSuite =
-      Optional.empty();
   }
 
   /**
@@ -94,7 +90,7 @@ public final class ErvillaExtension
     final var configuration =
       supervisorGetConfiguration(context);
 
-    return SUPERVISORS.isSupported(configuration);
+    return ErvillaSingletons.SUPERVISORS.isSupported(configuration);
   }
 
   /**
@@ -105,15 +101,18 @@ public final class ErvillaExtension
    * creating a supervisor using the default supervisor factory.
    *
    * @param context The extension context
+   * @param scope
    *
    * @return A supervisor, if containers are supported
    *
    * @throws InterruptedException On interruption
+   * @throws Exception            On errors
    */
 
-  public static Optional<EContainerSupervisorType> supervisorCreate(
-    final ExtensionContext context)
-    throws InterruptedException
+  public Optional<EContainerSupervisorType> supervisorCreate(
+    final ExtensionContext context,
+    final EContainerSupervisorScope scope)
+    throws InterruptedException, Exception
   {
     Objects.requireNonNull(context, "context");
 
@@ -128,7 +127,28 @@ public final class ErvillaExtension
       for (final var entry : support.attributes().entrySet()) {
         LOG.info("Containers: {}: {}", entry.getKey(), entry.getValue());
       }
-      return Optional.of(SUPERVISORS.create(configuration));
+
+      return switch (scope) {
+        case PER_SUITE -> {
+          yield Optional.of(ErvillaSingletons.perSuiteSupervisor(configuration));
+        }
+
+        case PER_CLASS -> {
+          final EContainerSupervisorType supervisor =
+            ErvillaSingletons.perClassSupervisor(configuration);
+
+          this.supervisorsPerClass.add(supervisor);
+          yield Optional.of(supervisor);
+        }
+
+        case PER_TEST -> {
+          final EContainerSupervisorType supervisor =
+            ErvillaSingletons.perTestSupervisor(configuration);
+
+          this.supervisorsPerTest.add(supervisor);
+          yield Optional.of(supervisor);
+        }
+      };
     }
 
     LOG.info("Containers are NOT supported.");
@@ -235,6 +255,35 @@ public final class ErvillaExtension
     );
   }
 
+  private static EContainerSupervisorScope determineScope(
+    final ParameterContext parameterContext)
+  {
+    final var afterClassOpt =
+      parameterContext.findAnnotation(ErvillaCloseAfterClass.class);
+    final var afterSuiteOpt =
+      parameterContext.findAnnotation(ErvillaCloseAfterSuite.class);
+
+    if (afterClassOpt.isPresent() && afterSuiteOpt.isPresent()) {
+      throw new ParameterResolutionException(
+        "Specifying both %s and %s is not allowed."
+          .formatted(
+            ErvillaCloseAfterClass.class,
+            ErvillaCloseAfterSuite.class
+          )
+      );
+    }
+
+    if (afterSuiteOpt.isPresent()) {
+      return EContainerSupervisorScope.PER_SUITE;
+    }
+
+    if (afterClassOpt.isPresent()) {
+      return EContainerSupervisorScope.PER_CLASS;
+    }
+
+    return EContainerSupervisorScope.PER_TEST;
+  }
+
   @Override
   public Object resolveParameter(
     final ParameterContext parameterContext,
@@ -246,40 +295,10 @@ public final class ErvillaExtension
 
     if (Objects.equals(requiredType, EContainerSupervisorType.class)) {
       try {
-        final var afterClassOpt =
-          parameterContext.findAnnotation(ErvillaCloseAfterClass.class);
-        final var afterSuiteOpt =
-          parameterContext.findAnnotation(ErvillaCloseAfterSuite.class);
-
-        if (afterClassOpt.isPresent() && afterSuiteOpt.isPresent()) {
-          throw new ParameterResolutionException(
-            "Specifying both %s and %s is not allowed."
-              .formatted(
-                ErvillaCloseAfterClass.class,
-                ErvillaCloseAfterSuite.class
-              )
-          );
-        }
-
-        if (afterSuiteOpt.isPresent()) {
-          if (this.supervisorPerSuite.isPresent()) {
-            return this.supervisorPerSuite.get();
-          }
-        }
-
-        final var supervisor =
-          supervisorCreate(extensionContext)
-            .orElseThrow();
-
-        if (afterClassOpt.isPresent()) {
-          this.supervisorsPerClass.add(supervisor);
-        } else if (afterSuiteOpt.isPresent()) {
-          this.supervisorPerSuite = Optional.of(supervisor);
-        } else {
-          this.supervisorsPerTest.add(supervisor);
-        }
-
-        return supervisor;
+        return this.supervisorCreate(
+          extensionContext,
+          determineScope(parameterContext)
+        ).orElseThrow();
       } catch (final Exception e) {
         throw new ParameterResolutionException(e.getMessage(), e);
       }
@@ -336,21 +355,15 @@ public final class ErvillaExtension
     throws Exception
   {
     supervisorFailBasedOnSupportAppropriately(context);
+    this.registerSuiteCloseable(context);
+  }
 
+  private void registerSuiteCloseable(
+    final ExtensionContext context)
+  {
     context.getRoot()
       .getStore(GLOBAL)
-      .put("Ervilla", (AfterSuiteType) () -> {
-        this.supervisorPerSuite.ifPresent(supervisor -> {
-          LOG.debug("Closing per-suite supervisor.");
-
-          try {
-            supervisor.close();
-          } catch (final Exception e) {
-            LOG.error("Error closing supervisor: ", e);
-          }
-        });
-        this.supervisorPerSuite = Optional.empty();
-      });
+      .put(OnSuiteEnd.class.getCanonicalName(), new OnSuiteEnd());
   }
 
   @Override
@@ -359,11 +372,22 @@ public final class ErvillaExtension
   {
     context.getStore(GLOBAL)
       .put(ErvillaExtension.class.getCanonicalName(), this);
+    this.registerSuiteCloseable(context);
   }
 
-  private interface AfterSuiteType
-    extends ExtensionContext.Store.CloseableResource
+  private final class OnSuiteEnd
+    implements ExtensionContext.Store.CloseableResource
   {
+    private OnSuiteEnd()
+    {
 
+    }
+
+    @Override
+    public void close()
+      throws Exception
+    {
+      ErvillaSingletons.close();
+    }
   }
 }

@@ -15,28 +15,10 @@
  */
 
 /**
- * Podman testing service (Native implementation)
+ * Podman testing service (JUnit extension)
  */
 
-module com.io7m.ervilla.native_exec
-{
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+@Version("1.0.0")
+package com.io7m.ervilla.test_extension.internal;
 
-  requires com.io7m.ervilla.api;
-
-  requires com.io7m.jade.api;
-  requires com.io7m.jade.vanilla;
-  requires com.io7m.jdeferthrow.core;
-  requires com.io7m.lanark.core;
-  requires com.io7m.trasco.api;
-  requires com.io7m.trasco.vanilla;
-  requires java.sql;
-  requires org.slf4j;
-  requires org.xerial.sqlitejdbc;
-
-  exports com.io7m.ervilla.native_exec;
-
-  exports com.io7m.ervilla.native_exec.internal
-    to com.io7m.ervilla.tests;
-}
+import org.osgi.annotation.versioning.Version;

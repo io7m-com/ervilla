@@ -18,6 +18,7 @@ package com.io7m.ervilla.tests;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
+import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static com.io7m.ervilla.api.EContainerSupervisorScope.PER_TEST;
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -101,7 +103,7 @@ public final class ENContainerSupervisorsTest
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
       final var c =
         supervisor.start(
           EContainerSpec.builder(
@@ -149,7 +151,7 @@ public final class ENContainerSupervisorsTest
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
 
       final var pod =
         supervisor.createPod(
@@ -204,7 +206,7 @@ public final class ENContainerSupervisorsTest
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
@@ -250,7 +252,7 @@ public final class ENContainerSupervisorsTest
     );
 
     try (var supervisor =
-           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME))) {
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
