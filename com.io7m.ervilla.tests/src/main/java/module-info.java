@@ -29,6 +29,7 @@ open module com.io7m.ervilla.tests
   requires static org.osgi.annotation.versioning;
 
   requires org.slf4j;
+  requires com.io7m.lanark.core;
 
   requires org.junit.jupiter.api;
   requires org.junit.jupiter.engine;

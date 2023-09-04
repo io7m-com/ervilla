@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Schemas xmlns="urn:com.io7m.trasco.database.statements:1:0">
+  <Schema versionCurrent="0">
+    <Comment>
+      The schema version table stores the current version of the database
+      schema. Implementations are expected to query this table on connecting to
+      the database in order to ensure that the calling code is compatible with
+      the tables in the database.
+    </Comment>
+
+    <Statement><![CDATA[
+CREATE TABLE schema_version (
+  version_ban           TEXT     NOT NULL DEFAULT 'x',
+  version_number        INTEGER  NOT NULL,
+  version_application   TEXT     NOT NULL,
+  version_project       TEXT     NOT NULL,
+
+  CONSTRAINT check_ban_primary
+    PRIMARY KEY (version_ban),
+
+  CONSTRAINT check_ban_banned
+    CHECK (version_ban = 'x')
+)
+-- [jooq ignore start]
+STRICT
+-- [jooq ignore stop]
+]]></Statement>
+  </Schema>
+
+  <Schema versionCurrent="1">
+    <Comment>
+      The pods table contains all the pods created during a test execution.
+    </Comment>
+
+    <Statement><![CDATA[
+CREATE TABLE pods (
+  p_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  p_name  TEXT    NOT NULL,
+
+  -- [jooq ignore start]
+  CONSTRAINT pods_name_unique
+    UNIQUE (p_name)
+  -- [jooq ignore stop]
+)
+-- [jooq ignore start]
+STRICT
+-- [jooq ignore stop]
+]]></Statement>
+
+    <Comment>
+      The containers table contains all the containers created during a test
+      execution.
+    </Comment>
+
+    <Statement><![CDATA[
+CREATE TABLE containers (
+  c_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  c_name  TEXT    NOT NULL,
+  c_pod   INTEGER,
+
+  -- [jooq ignore start]
+  CONSTRAINT containers_name_unique
+    UNIQUE (c_name),
+  -- [jooq ignore stop]
+
+  CONSTRAINT containers_pod_exists
+    FOREIGN KEY (c_pod) REFERENCES pods (p_id)
+)
+-- [jooq ignore start]
+STRICT
+-- [jooq ignore stop]
+]]></Statement>
+  </Schema>
+
+  <Schema versionCurrent="2">
+    <Comment>
+      The audit table contains the series of events that have occurred recently.
+    </Comment>
+
+    <Statement><![CDATA[
+CREATE TABLE audit (
+  a_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  a_instance  TEXT    NOT NULL,
+  a_scope     TEXT    NOT NULL,
+  a_time_ms   INTEGER NOT NULL,
+  a_text      TEXT    NOT NULL
+)
+-- [jooq ignore start]
+STRICT
+-- [jooq ignore stop]
+]]></Statement>
+  </Schema>
+</Schemas>

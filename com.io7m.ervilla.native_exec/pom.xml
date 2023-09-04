@@ -9,7 +9,7 @@
   <parent>
     <artifactId>com.io7m.ervilla</artifactId>
     <groupId>com.io7m.ervilla</groupId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
   </parent>
   <artifactId>com.io7m.ervilla.native_exec</artifactId>
 
@@ -26,12 +26,36 @@
     </dependency>
 
     <dependency>
+      <groupId>com.io7m.lanark</groupId>
+      <artifactId>com.io7m.lanark.core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.io7m.jdeferthrow</groupId>
       <artifactId>com.io7m.jdeferthrow.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.io7m.trasco</groupId>
+      <artifactId>com.io7m.trasco.api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.io7m.trasco</groupId>
+      <artifactId>com.io7m.trasco.vanilla</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.io7m.jade</groupId>
+      <artifactId>com.io7m.jade.api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.io7m.jade</groupId>
+      <artifactId>com.io7m.jade.vanilla</artifactId>
     </dependency>
 
     <dependency>
@@ -45,5 +69,23 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Ignore dependencies that bytecode analysis gets wrong. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <failOnWarning>true</failOnWarning>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>
+              com.io7m.jade:*
+            </ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

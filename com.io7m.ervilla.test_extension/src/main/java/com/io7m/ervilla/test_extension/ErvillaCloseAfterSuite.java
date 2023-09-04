@@ -26,12 +26,12 @@ import java.lang.annotation.Target;
  * A configuration annotation that, when applied to an injected supervisor
  * parameter, will indicate that the supervisor (and therefore the containers
  * created by that supervisor) should be closed after all tests have run
- * (instead of being closed at the end of the current test).
+ * in the entire test suite (ie. all test classes).
  */
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface ErvillaCloseAfterAll
+public @interface ErvillaCloseAfterSuite
 {
 
 }

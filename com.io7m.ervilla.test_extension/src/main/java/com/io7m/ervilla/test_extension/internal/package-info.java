@@ -18,17 +18,7 @@
  * Podman testing service (JUnit extension)
  */
 
-module com.io7m.ervilla.test_extension
-{
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+@Version("1.0.0")
+package com.io7m.ervilla.test_extension.internal;
 
-  requires com.io7m.ervilla.native_exec;
-  requires com.io7m.ervilla.api;
-
-  requires com.io7m.lanark.core;
-  requires org.junit.jupiter.api;
-  requires org.slf4j;
-
-  exports com.io7m.ervilla.test_extension;
-}
+import org.osgi.annotation.versioning.Version;

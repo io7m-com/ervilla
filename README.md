@@ -51,9 +51,27 @@ Annotate your test suite with `@ExtendWith(ErvillaExtension.class)`. This
 will allow tests to get access to an injected `EContainerSupervisorType`
 instance that can be used to create containers.
 
-Additionally, it can be useful to have tests simply disable themselves rather
-than running and failing if they are executed on a system that doesn't have
-a `podman` executable. Both the name of the `podman` executable and a flag
+#### Container Database
+
+`ervilla` maintains a persistent store of the containers and pods that it
+has created. Each time the `ervilla` package is started, it will attempt to
+clean up any pods and/or containers that have inadvertently managed to survive
+the previous test run. The `ervilla` package expects each test suite to
+provide a _project name_; A test run in a given project will _only_ attempt
+to clean up containers/pods that are labelled with the same project name.
+
+This is important with regard to concurrency: `ervilla` is designed to be
+used in sets of projects that may be built in parallel on the same physical
+machine during continuous integration runs. By keeping containers strictly
+separated by project name, the package avoids accidentally trying to clean up
+the containers that may be created by the _other_ project's test suite running
+in parallel with the current project.
+
+#### Disable Support
+
+It can be useful to have tests simply disable themselves rather than running
+and failing if they are executed on a system that doesn't have a `podman`
+executable. Both the name of the `podman` executable and a flag
 that disables tests if `podman` isn't supported can be specified in an
 `@ErvillaConfiguration` annotation placed on the test class.
 
@@ -62,6 +80,7 @@ An example test from the test suite:
 ```
 @ExtendWith(ErvillaExtension.class)
 @ErvillaConfiguration(
+  projectName = "com.io7m.example"
   podmanExecutable = "podman",
   disabledIfUnsupported = true
 )
@@ -124,12 +143,32 @@ public final class ErvillaExtensionContainerPerTest
 }
 ```
 
-All of the containers created in each invocation of the `@BeforeEach`
-method are destroyed automatically after each test completes. In some
-cases, it may be desirable to start up a container once and use the
-same instance in all tests. This can be achieved by defining a `@BeforeAll`
-method and annotating the injected supervisor parameter with the
-`@ErvillaCloseAfterAll` annotation:
+#### Container Scope
+
+An injected _supervisor_ instance has one of the following scope values:
+
+  * `PER_SUITE`
+  * `PER_CLASS`
+  * `PER_TEST`
+
+Containers created from a supervisor with `PER_SUITE` scope will be destroyed
+at the end of the entire test suite run.
+
+Containers created from a supervisor with `PER_CLASS` scope will be destroyed
+at the end of the containing test class execution.
+
+Containers created from a supervisor with `PER_TEST` scope will be destroyed
+at the end of each test method.
+
+To get a `PER_SUITE` scoped supervisor, annotate the injected supervisor
+parameter with `@ErvillaCloseAfterSuite`.
+
+To get a `PER_CLASS` scoped supervisor, annotate the injected supervisor
+parameter with `@ErvillaCloseAfterClass`.
+
+To get a `PER_TEST` scoped supervisor, do not annotate the injected
+supervisor.
+
 
 ```
 @ExtendWith(ErvillaExtension.class)
@@ -140,7 +179,7 @@ public final class ErvillaExtensionCloseAfterAllTest
 
   @BeforeAll
   public static void beforeAll(
-    final @ErvillaCloseAfterAll EContainerSupervisorType supervisor)
+    final @ErvillaCloseAfterClass EContainerSupervisorType supervisor)
     throws Exception
   {
     CONTAINER =
@@ -195,4 +234,100 @@ The container is created once in the `@BeforeAll` method and assigned to
 a static field `CONTAINER`. Each of `test0()`, `test1()`, `test2()` can
 use this container instance, and the instance itself will be destroyed when
 the test class completes.
+
+#### Container Reuse
+
+It is common, in test suites, to instantiate heavyweight containers such
+as databases just once and then reuse those containers throughout the entire
+test suite. The reuse of a container (with appropriate code to drop and
+recreate a database each time) can turn a ten minute test suite execution into
+a one minute execution.
+
+The following is a relatively safe way to achieve this:
+
+```
+class TestServices {
+  private static EContainerType DATABASE;
+
+  public static EContainerType database(
+    final EContainerSupervisorType supervisor)
+  {
+    if (DATABASE == null) {
+      DATABASE = createDatabase(supervisor);
+    }
+    return DATABASE;
+  }
+}
+
+@ExtendWith({ErvillaExtension.class})
+@ErvillaConfiguration(projectName = "com.io7m.example", disabledIfUnsupported = true)
+class Test0 {
+  private static EContainerType DATABASE;
+
+  @BeforeAll
+  public static void setupOnce(
+    final @ErvillaCloseAfterSuite EContainerSupervisorType containers)
+    throws Exception
+  {
+    DATABASE = TestServices.database(supervisor);
+    resetDatabase(DATABASE);
+  }
+
+  @Test
+  public void test0()
+  {
+    // Use database here
+  }
+
+  @Test
+  public void test1()
+  {
+    // Use database here
+  }
+
+  @Test
+  public void test2()
+  {
+    // Use database here
+  }
+}
+
+@ExtendWith({ErvillaExtension.class})
+@ErvillaConfiguration(projectName = "com.io7m.example", disabledIfUnsupported = true)
+class Test1 {
+  private static EContainerType DATABASE;
+
+  @BeforeAll
+  public static void setupOnce(
+    final @ErvillaCloseAfterSuite EContainerSupervisorType containers)
+    throws Exception
+  {
+    DATABASE = TestServices.database(supervisor);
+    resetDatabase(DATABASE);
+  }
+
+  @Test
+  public void test0()
+  {
+    // Use database here
+  }
+
+  @Test
+  public void test1()
+  {
+    // Use database here
+  }
+
+  @Test
+  public void test2()
+  {
+    // Use database here
+  }
+}
+```
+
+Assuming that `resetDatabase` can drop and recreate the container's
+database, and `createDatabase` does the initial creation of the
+database container, the above `Test1` and `Test0` classes will reuse
+the exact same database container instance.
 

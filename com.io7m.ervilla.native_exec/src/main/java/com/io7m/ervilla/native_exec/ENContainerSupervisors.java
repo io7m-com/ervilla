@@ -20,8 +20,12 @@ package com.io7m.ervilla.native_exec;
 import com.io7m.ervilla.api.EContainerBackend;
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSupervisorFactoryType;
+import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EContainerSupervisorType;
+import com.io7m.ervilla.native_exec.internal.EContainerStore;
 import com.io7m.ervilla.native_exec.internal.EContainerSupervisor;
+import com.io7m.jade.api.ApplicationDirectories;
+import com.io7m.jade.api.ApplicationDirectoryConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +33,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.ProcessBuilder.Redirect.PIPE;
@@ -47,6 +56,10 @@ public final class ENContainerSupervisors
   private static final Logger LOG =
     LoggerFactory.getLogger(ENContainerSupervisors.class);
 
+  private final ConcurrentHashMap.KeySetView<EContainerSupervisor, Boolean> instances;
+  private final ExecutorService ioSupervisor;
+  private final UUID id;
+
   /**
    * A factory for container supervisors that execute the {@code podman} native
    * executable.
@@ -54,7 +67,19 @@ public final class ENContainerSupervisors
 
   public ENContainerSupervisors()
   {
+    this.instances =
+      ConcurrentHashMap.newKeySet();
 
+    this.ioSupervisor =
+      Executors.newCachedThreadPool(r -> {
+        final var thread = new Thread(r);
+        thread.setName("com.io7m.ervilla[%d]".formatted(Long.valueOf(thread.getId())));
+        thread.setDaemon(true);
+        return thread;
+      });
+    
+    this.id =
+      UUID.randomUUID();
   }
 
   @Override
@@ -103,9 +128,54 @@ public final class ENContainerSupervisors
 
   @Override
   public EContainerSupervisorType create(
-    final EContainerConfiguration configuration)
+    final EContainerConfiguration configuration,
+    final EContainerSupervisorScope scope)
+    throws Exception
   {
-    return new EContainerSupervisor(configuration);
+    final var directoryConfiguration =
+      ApplicationDirectoryConfiguration.builder()
+        .setOverridePropertyName("com.io7m.ervilla.override")
+        .setPortablePropertyName("com.io7m.ervilla.portable")
+        .setApplicationName("com.io7m.ervilla")
+        .build();
+
+    final var directories =
+      ApplicationDirectories.get(directoryConfiguration);
+
+    final var projectName =
+      configuration.projectName();
+
+    final var storeDbDirectory =
+      directories.dataDirectory()
+        .resolve(projectName.value());
+
+    Files.createDirectories(storeDbDirectory);
+
+    final var storeDb =
+      storeDbDirectory.resolve("containers.db");
+
+    LOG.debug("Container database is {}", storeDb);
+
+    final var store =
+      EContainerStore.open(projectName, storeDb, this.id, scope);
+
+    final var instance =
+      EContainerSupervisor.create(
+        configuration,
+        store,
+        this.ioSupervisor,
+        this.instances::remove,
+        this.id,
+        scope
+      );
+
+    if (this.instances.isEmpty()) {
+      LOG.debug("No existing instances: Running cleanup.");
+      instance.cleanUpOldContainersAndPods();
+    }
+
+    this.instances.add(instance);
+    return instance;
   }
 
   private static BufferedReader bufferedReader(

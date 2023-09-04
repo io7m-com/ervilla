@@ -14,49 +14,24 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.ervilla.test_extension;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.concurrent.TimeUnit;
 
 /**
- * Configuration information for the Ervilla extension.
+ * A configuration annotation that, when applied to an injected supervisor
+ * parameter, will indicate that the supervisor (and therefore the containers
+ * created by that supervisor) should be closed after all tests have run
+ * (instead of being closed at the end of the current test).
  */
 
-@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ErvillaConfiguration
+@Target(ElementType.PARAMETER)
+public @interface ErvillaCloseAfterClass
 {
-  /**
-   * @return The project name
-   */
 
-  String projectName();
-
-  /**
-   * @return The podman executable used
-   */
-
-  String podmanExecutable() default "podman";
-
-  /**
-   * @return {@code true} if tests should be disabled if containers are not supported
-   */
-
-  boolean disabledIfUnsupported() default false;
-
-  /**
-   * @return The startup wait time
-   */
-
-  long startupWaitTime() default 30L;
-
-  /**
-   * @return The startup wait time unit
-   */
-
-  TimeUnit startupWaitTimeUnit() default TimeUnit.SECONDS;
 }

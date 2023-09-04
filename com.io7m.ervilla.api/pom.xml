@@ -9,7 +9,7 @@
   <parent>
     <artifactId>com.io7m.ervilla</artifactId>
     <groupId>com.io7m.ervilla</groupId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
   </parent>
   <artifactId>com.io7m.ervilla.api</artifactId>
 
@@ -22,6 +22,10 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.io7m.lanark</groupId>
+      <artifactId>com.io7m.lanark.core</artifactId>
     </dependency>
 
     <dependency>

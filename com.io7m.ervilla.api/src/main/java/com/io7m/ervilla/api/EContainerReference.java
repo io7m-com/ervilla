@@ -14,21 +14,33 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
+package com.io7m.ervilla.api;
+
+import java.util.Objects;
+import java.util.Optional;
+
 /**
- * Podman testing service (JUnit extension)
+ * A reference to a created container.
+ *
+ * @param name The container name
+ * @param pod  The pod name (if the container is in a pod)
  */
 
-module com.io7m.ervilla.test_extension
+public record EContainerReference(
+  String name,
+  Optional<String> pod)
 {
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+  /**
+   * A reference to a created container.
+   *
+   * @param name The container name
+   * @param pod  The pod name (if the container is in a pod)
+   */
 
-  requires com.io7m.ervilla.native_exec;
-  requires com.io7m.ervilla.api;
-
-  requires com.io7m.lanark.core;
-  requires org.junit.jupiter.api;
-  requires org.slf4j;
-
-  exports com.io7m.ervilla.test_extension;
+  public EContainerReference
+  {
+    Objects.requireNonNull(name, "name");
+    Objects.requireNonNull(pod, "pod");
+  }
 }
