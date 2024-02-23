@@ -30,10 +30,11 @@
 
   <properties>
     <com.io7m.jade.version>1.0.2</com.io7m.jade.version>
-    <com.io7m.trasco.version>1.1.0</com.io7m.trasco.version>
     <com.io7m.quarrel.version>1.4.0</com.io7m.quarrel.version>
+    <com.io7m.trasco.version>1.1.0</com.io7m.trasco.version>
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
     <io7m.api.previousVersion>0.0.5</io7m.api.previousVersion>
+    <io7m.java.targetJavaVersion>21</io7m.java.targetJavaVersion>
     <jqwik.version>1.8.2</jqwik.version>
     <junit.version>5.10.1</junit.version>
   </properties>
