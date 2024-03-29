@@ -2,10 +2,10 @@ ervilla
 ===
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.io7m.ervilla/com.io7m.ervilla.svg?style=flat-square)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.io7m.ervilla%22)
-[![Maven Central (snapshot)](https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/com.io7m.ervilla/com.io7m.ervilla.svg?style=flat-square)](https://s01.oss.sonatype.org/content/repositories/snapshots/com/io7m/ervilla/)
+[![Maven Central (snapshot)](https://img.shields.io/nexus/s/com.io7m.ervilla/com.io7m.ervilla?server=https%3A%2F%2Fs01.oss.sonatype.org&style=flat-square)](https://s01.oss.sonatype.org/content/repositories/snapshots/com/io7m/ervilla/)
 [![Codecov](https://img.shields.io/codecov/c/github/io7m/ervilla.svg?style=flat-square)](https://codecov.io/gh/io7m/ervilla)
 
-![ervilla](./src/site/resources/ervilla.jpg?raw=true)
+![com.io7m.ervilla](./src/site/resources/ervilla.jpg?raw=true)
 
 | JVM | Platform | Status |
 |-----|----------|--------|
