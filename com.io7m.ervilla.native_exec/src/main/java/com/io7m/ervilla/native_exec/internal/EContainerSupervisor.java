@@ -311,7 +311,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       );
 
       final var arguments = new ArrayList<String>();
-      arguments.add(this.configuration.podmanExecutable());
+      arguments.addAll(this.podman());
       arguments.add("run");
       arguments.add("--interactive");
       arguments.add("--tty");
@@ -371,6 +371,15 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       MDC.remove("PID");
       MDC.remove("Source");
     }
+  }
+
+  private List<String> podman()
+  {
+    return List.of(
+      this.configuration.podmanExecutable(),
+      "--log-level",
+      "debug"
+    );
   }
 
   private String createFreshContainerName()
@@ -448,8 +457,8 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       new ProcessBuilder(command)
         .start();
 
-    EContainerSupervisor.superviseProcessError(container, name, process);
-    EContainerSupervisor.superviseProcessOutput(container, name, process, lineConsumer);
+    superviseProcessError(container, name, process);
+    superviseProcessOutput(container, name, process, lineConsumer);
     return process;
   }
 
@@ -466,7 +475,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     this.store.podPut(podName);
 
     final var createArgs = new ArrayList<String>();
-    createArgs.add(this.configuration.podmanExecutable());
+    createArgs.addAll(this.podman());
     createArgs.add("pod");
     createArgs.add("create");
     for (final var port : ports) {
@@ -508,7 +517,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     throws IOException, InterruptedException
   {
     final var rmArgs = new ArrayList<String>(6);
-    rmArgs.add(this.configuration.podmanExecutable());
+    rmArgs.addAll(this.podman());
     rmArgs.add("rm");
     rmArgs.add("-f");
     rmArgs.add("--volumes");
@@ -538,7 +547,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     throws IOException, InterruptedException
   {
     final var closeArgs = new ArrayList<String>(6);
-    closeArgs.add(this.configuration.podmanExecutable());
+    closeArgs.addAll(this.podman());
     closeArgs.add("stop");
     closeArgs.add("--ignore");
     closeArgs.add("--time");
@@ -568,7 +577,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     throws IOException, InterruptedException
   {
     final var rmArgs = new ArrayList<String>();
-    rmArgs.add(this.configuration.podmanExecutable());
+    rmArgs.addAll(this.podman());
     rmArgs.add("pod");
     rmArgs.add("rm");
     rmArgs.add("-f");
