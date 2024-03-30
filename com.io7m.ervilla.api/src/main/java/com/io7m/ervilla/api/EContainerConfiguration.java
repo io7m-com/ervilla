@@ -21,7 +21,6 @@ import com.io7m.lanark.core.RDottedName;
 
 import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The container configuration.

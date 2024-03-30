@@ -18,7 +18,6 @@ package com.io7m.ervilla.tests;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
-import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
@@ -35,7 +34,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static com.io7m.ervilla.api.EContainerSupervisorScope.PER_TEST;
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
