@@ -57,7 +57,6 @@ public final class ENContainerSupervisors
     LoggerFactory.getLogger(ENContainerSupervisors.class);
 
   private final ConcurrentHashMap.KeySetView<EContainerSupervisor, Boolean> instances;
-  private final ExecutorService ioSupervisor;
   private final UUID id;
 
   /**
@@ -69,15 +68,6 @@ public final class ENContainerSupervisors
   {
     this.instances =
       ConcurrentHashMap.newKeySet();
-
-    this.ioSupervisor =
-      Executors.newCachedThreadPool(r -> {
-        final var thread = new Thread(r);
-        thread.setName("com.io7m.ervilla[%d]".formatted(Long.valueOf(thread.getId())));
-        thread.setDaemon(true);
-        return thread;
-      });
-    
     this.id =
       UUID.randomUUID();
   }
@@ -163,7 +153,6 @@ public final class ENContainerSupervisors
       EContainerSupervisor.create(
         configuration,
         store,
-        this.ioSupervisor,
         this.instances::remove,
         this.id,
         scope

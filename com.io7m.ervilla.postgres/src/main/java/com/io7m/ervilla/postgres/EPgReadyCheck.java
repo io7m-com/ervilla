@@ -18,6 +18,7 @@
 package com.io7m.ervilla.postgres;
 
 import com.io7m.ervilla.api.EReadyCheckType;
+import org.postgresql.PGProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,18 +87,13 @@ public final class EPgReadyCheck implements EReadyCheckType
     throws Exception
   {
     final var properties = new Properties();
-    properties.setProperty("user", this.userName);
-    properties.setProperty("password", this.password);
+    properties.setProperty(PGProperty.USER.getName(), this.userName);
+    properties.setProperty(PGProperty.PASSWORD.getName(), this.password);
+    properties.setProperty(PGProperty.PG_HOST.getName(), this.address);
+    properties.setProperty(PGProperty.PG_PORT.getName(), Integer.toString(this.port));
+    properties.setProperty(PGProperty.PG_DBNAME.getName(), this.database);
 
-    final var url =
-      "jdbc:postgresql://%s:%d/%s"
-        .formatted(
-          this.address,
-          Integer.valueOf(this.port),
-          this.database
-        );
-
-    try (var conn = DriverManager.getConnection(url, properties)) {
+    try (var conn = DriverManager.getConnection("jdbc:postgresql://", properties)) {
       return conn.isValid(1000);
     }
   }

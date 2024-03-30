@@ -19,6 +19,7 @@ package com.io7m.ervilla.api;
 
 import com.io7m.lanark.core.RDottedName;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -28,31 +29,30 @@ import java.util.concurrent.TimeUnit;
  * @param projectName         The project name
  * @param podmanExecutable    The podman executable
  * @param startupWaitTime     The startup wait time
- * @param startupWaitTimeUnit The startup wait time unit
+ * @param livenessCheckPauseTime The pause time between liveness checks
  */
 
 public record EContainerConfiguration(
   RDottedName projectName,
   String podmanExecutable,
-  long startupWaitTime,
-  TimeUnit startupWaitTimeUnit)
+  Duration startupWaitTime,
+  Duration livenessCheckPauseTime)
 {
-
-
   /**
    * The container configuration.
    *
    * @param projectName         The project name
    * @param podmanExecutable    The podman executable
    * @param startupWaitTime     The startup wait time
-   * @param startupWaitTimeUnit The startup wait time unit
+   * @param livenessCheckPauseTime The pause time between liveness checks
    */
 
   public EContainerConfiguration
   {
     Objects.requireNonNull(projectName, "projectName");
     Objects.requireNonNull(podmanExecutable, "podmanExecutable");
-    Objects.requireNonNull(startupWaitTimeUnit, "startupWaitTimeUnit");
+    Objects.requireNonNull(startupWaitTime, "startupWaitTime");
+    Objects.requireNonNull(livenessCheckPauseTime, "livenessCheckPauseTime");
   }
 
   /**
@@ -67,8 +67,8 @@ public record EContainerConfiguration(
     return new EContainerConfiguration(
       projectName,
       "podman",
-      30L,
-      TimeUnit.SECONDS
+      Duration.ofSeconds(30L),
+      Duration.ofMillis(500L)
     );
   }
 }

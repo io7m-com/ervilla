@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -45,8 +46,12 @@ public final class ENContainerSupervisorsTest
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(ENContainerSupervisorsTest.class);
+
   private static final RDottedName PROJECT_NAME =
     new RDottedName("com.io7m.ervilla");
+
+  private static final String POSTGRES_VERSION =
+    "15.6-alpine3.19";
 
   @Test
   public void testIsSupported()
@@ -81,8 +86,9 @@ public final class ENContainerSupervisorsTest
         new EContainerConfiguration(
           PROJECT_NAME,
           "THIS-DOES-NOT-EXIST",
-          30L,
-          TimeUnit.SECONDS)
+          Duration.ofSeconds(30L),
+          Duration.ofMillis(250L)
+        )
       );
 
     assertTrue(support.isEmpty());
@@ -167,7 +173,7 @@ public final class ENContainerSupervisorsTest
 
       pod.start(
         EPgSpecs.builderFromDockerIO(
-          "15.3-alpine3.18",
+          POSTGRES_VERSION,
           Optional.empty(),
           5432,
           "db-xyz",
@@ -210,7 +216,7 @@ public final class ENContainerSupervisorsTest
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
-            "15.3-alpine3.18",
+            POSTGRES_VERSION,
             Optional.of("[::]"),
             5432,
             "db-xyz",
@@ -256,7 +262,7 @@ public final class ENContainerSupervisorsTest
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
-            "15.3-alpine3.18",
+            POSTGRES_VERSION,
             Optional.of("[::]"),
             5432,
             "db-xyz",
@@ -265,13 +271,13 @@ public final class ENContainerSupervisorsTest
           ).build()
         );
 
-      LOG.debug("### STOP!");
+      LOG.info("### STOP!");
       c.stop();
-      LOG.debug("### START!");
+      LOG.info("### START!");
       c.start();
-      LOG.debug("### STOP!");
+      LOG.info("### STOP!");
       c.stop();
-      LOG.debug("### START!");
+      LOG.info("### START!");
       c.start();
 
       final var e =
