@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,31 +14,21 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.ervilla.api;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
- * A container supervisor.
+ * A container pod.
+ *
+ * @see "https://docs.podman.io/en/latest/markdown/podman-pod.1.html"
  */
 
-public interface EContainerSupervisorType
-  extends AutoCloseable, EContainerFactoryType
+public interface EContainerPodType
+  extends EContainerFactoryType
 {
   /**
-   * Create a new pod.
-   *
-   * @param ports The ports that will be published from within the pod to the host
-   *
-   * @return A new pod
-   *
-   * @throws IOException          On errors
-   * @throws InterruptedException On interruption
-   * @see "podman-pod-create"
+   * @return The pod name
    */
 
-  EContainerPodType createPod(
-    List<EPortPublish> ports)
-    throws IOException, InterruptedException;
+  String name();
 }

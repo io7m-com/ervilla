@@ -17,7 +17,7 @@
 package com.io7m.ervilla.native_exec.internal;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
-import com.io7m.ervilla.api.EContainerFactoryType;
+import com.io7m.ervilla.api.EContainerPodType;
 import com.io7m.ervilla.api.EContainerReference;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerStop;
@@ -190,10 +190,11 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   private static String portSpec(
     final EPortPublish publish)
   {
-    return switch (publish.hostAddress()) {
-      case final EPortAddressType.Address address -> {
+    final var portAddress = publish.hostAddress();
+    return switch (portAddress) {
+      case final EPortAddressType.Address6 ignored -> {
         yield "%s:%s:%s/%s".formatted(
-          address.targetAddress(),
+          portAddress.targetAddress(),
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
           switch (publish.protocol()) {
@@ -202,7 +203,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           }
         );
       }
-      case final EPortAddressType.All all -> {
+      case final EPortAddressType.All ignored -> {
         yield "%s:%s/%s".formatted(
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
@@ -212,7 +213,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           }
         );
       }
-      case final EPortAddressType.AllIPv4 allIPv4 -> {
+      case final EPortAddressType.AllIPv4 ignored -> {
         yield "0.0.0.0:%s:%s/%s".formatted(
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
@@ -222,8 +223,19 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           }
         );
       }
-      case final EPortAddressType.AllIPv6 allIPv6 -> {
+      case final EPortAddressType.AllIPv6 ignored -> {
         yield "[::]:%s:%s/%s".formatted(
+          Integer.valueOf(publish.hostPort()),
+          Integer.valueOf(publish.containerPort()),
+          switch (publish.protocol()) {
+            case TCP -> "tcp";
+            case UDP -> "udp";
+          }
+        );
+      }
+      case final EPortAddressType.Address4 ignored -> {
+        yield "%s:%s:%s/%s".formatted(
+          portAddress.targetAddress(),
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
           switch (publish.protocol()) {
@@ -494,7 +506,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   }
 
   @Override
-  public EContainerFactoryType createPod(
+  public EContainerPodType createPod(
     final List<EPortPublish> ports)
     throws IOException, InterruptedException
   {
@@ -656,7 +668,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   }
 
   private static final class EPod
-    implements EContainerFactoryType, AutoCloseable
+    implements AutoCloseable, EContainerPodType
   {
     private final String name;
     private final EContainerSupervisor supervisor;
@@ -687,6 +699,12 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       throws IOException, InterruptedException
     {
       this.supervisor.executePodDeletion(this.name);
+    }
+
+    @Override
+    public String name()
+    {
+      return this.name;
     }
   }
 
