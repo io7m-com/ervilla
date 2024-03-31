@@ -23,6 +23,7 @@ import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
+import com.io7m.ervilla.api.EPortAddressType;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.jdeferthrow.core.ExceptionTracker;
@@ -188,26 +189,49 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   private static String portSpec(
     final EPortPublish publish)
   {
-    if (publish.hostIP().isPresent()) {
-      final var hostIP = publish.hostIP().get();
-      return "%s:%s:%s/%s".formatted(
-        hostIP,
-        Integer.valueOf(publish.hostPort()),
-        Integer.valueOf(publish.containerPort()),
-        switch (publish.protocol()) {
-          case TCP -> "tcp";
-          case UDP -> "udp";
-        }
-      );
-    }
-    return "%s:%s/%s".formatted(
-      Integer.valueOf(publish.hostPort()),
-      Integer.valueOf(publish.containerPort()),
-      switch (publish.protocol()) {
-        case TCP -> "tcp";
-        case UDP -> "udp";
+    return switch (publish.hostAddress()) {
+      case final EPortAddressType.Address address -> {
+        yield "%s:%s:%s/%s".formatted(
+          address.targetAddress(),
+          Integer.valueOf(publish.hostPort()),
+          Integer.valueOf(publish.containerPort()),
+          switch (publish.protocol()) {
+            case TCP -> "tcp";
+            case UDP -> "udp";
+          }
+        );
       }
-    );
+      case final EPortAddressType.All all -> {
+        yield "%s:%s/%s".formatted(
+          Integer.valueOf(publish.hostPort()),
+          Integer.valueOf(publish.containerPort()),
+          switch (publish.protocol()) {
+            case TCP -> "tcp";
+            case UDP -> "udp";
+          }
+        );
+      }
+      case final EPortAddressType.AllIPv4 allIPv4 -> {
+        yield "0.0.0.0:%s:%s/%s".formatted(
+          Integer.valueOf(publish.hostPort()),
+          Integer.valueOf(publish.containerPort()),
+          switch (publish.protocol()) {
+            case TCP -> "tcp";
+            case UDP -> "udp";
+          }
+        );
+      }
+      case final EPortAddressType.AllIPv6 allIPv6 -> {
+        yield "[::]:%s:%s/%s".formatted(
+          Integer.valueOf(publish.hostPort()),
+          Integer.valueOf(publish.containerPort()),
+          switch (publish.protocol()) {
+            case TCP -> "tcp";
+            case UDP -> "udp";
+          }
+        );
+      }
+    };
   }
 
   private static String volumeSpec(
@@ -375,10 +399,16 @@ public final class EContainerSupervisor implements EContainerSupervisorType
 
   private List<String> podman()
   {
+    if (this.configuration.debugLogging()) {
+      return List.of(
+        this.configuration.podmanExecutable(),
+        "--log-level",
+        "debug"
+      );
+    }
+
     return List.of(
-      this.configuration.podmanExecutable(),
-      "--log-level",
-      "debug"
+      this.configuration.podmanExecutable()
     );
   }
 

@@ -25,25 +25,28 @@ import java.util.Objects;
 /**
  * The container configuration.
  *
- * @param projectName         The project name
- * @param podmanExecutable    The podman executable
- * @param startupWaitTime     The startup wait time
+ * @param projectName            The project name
+ * @param podmanExecutable       The podman executable
+ * @param startupWaitTime        The startup wait time
  * @param livenessCheckPauseTime The pause time between liveness checks
+ * @param debugLogging           Whether debug logging is enabled
  */
 
 public record EContainerConfiguration(
   RDottedName projectName,
   String podmanExecutable,
   Duration startupWaitTime,
-  Duration livenessCheckPauseTime)
+  Duration livenessCheckPauseTime,
+  boolean debugLogging)
 {
   /**
    * The container configuration.
    *
-   * @param projectName         The project name
-   * @param podmanExecutable    The podman executable
-   * @param startupWaitTime     The startup wait time
+   * @param projectName            The project name
+   * @param podmanExecutable       The podman executable
+   * @param startupWaitTime        The startup wait time
    * @param livenessCheckPauseTime The pause time between liveness checks
+   * @param debugLogging           Whether debug logging is enabled
    */
 
   public EContainerConfiguration
@@ -67,7 +70,8 @@ public record EContainerConfiguration(
       projectName,
       "podman",
       Duration.ofSeconds(30L),
-      Duration.ofMillis(500L)
+      Duration.ofMillis(500L),
+      false
     );
   }
 }

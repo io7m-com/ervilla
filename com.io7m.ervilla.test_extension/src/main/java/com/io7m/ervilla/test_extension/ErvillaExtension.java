@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -189,7 +188,11 @@ public final class ErvillaExtension
           annotation.startupWaitTime(),
           annotation.startupWaitTimeUnit().toChronoUnit()
         ),
-        Duration.of(250L, ChronoUnit.MILLIS)
+        Duration.of(
+          annotation.livenessCheckPauseTime(),
+          annotation.livenessCheckPauseTimeUnit().toChronoUnit()
+        ),
+        annotation.debugLogging()
       );
     }
     return configuration;

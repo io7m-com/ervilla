@@ -17,6 +17,7 @@
 
 package com.io7m.ervilla.postgres;
 
+import com.io7m.ervilla.api.EPortAddressType;
 import com.io7m.ervilla.api.EReadyCheckType;
 import org.postgresql.PGProperty;
 import org.slf4j.Logger;
@@ -35,14 +36,14 @@ public final class EPgReadyCheck implements EReadyCheckType
   private static final Logger LOG =
     LoggerFactory.getLogger(EPgReadyCheck.class);
 
-  private final String address;
+  private final EPortAddressType address;
   private final int port;
   private final String userName;
   private final String password;
   private final String database;
 
   private EPgReadyCheck(
-    final String inAddress,
+    final EPortAddressType inAddress,
     final int inPort,
     final String inUserName,
     final String inPassword,
@@ -73,7 +74,7 @@ public final class EPgReadyCheck implements EReadyCheckType
    */
 
   public static EReadyCheckType create(
-    final String inAddress,
+    final EPortAddressType inAddress,
     final int inPort,
     final String userName,
     final String password,
@@ -89,7 +90,7 @@ public final class EPgReadyCheck implements EReadyCheckType
     final var properties = new Properties();
     properties.setProperty(PGProperty.USER.getName(), this.userName);
     properties.setProperty(PGProperty.PASSWORD.getName(), this.password);
-    properties.setProperty(PGProperty.PG_HOST.getName(), this.address);
+    properties.setProperty(PGProperty.PG_HOST.getName(), this.address.targetAddress());
     properties.setProperty(PGProperty.PG_PORT.getName(), Integer.toString(this.port));
     properties.setProperty(PGProperty.PG_DBNAME.getName(), this.database);
 

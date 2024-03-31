@@ -18,19 +18,18 @@
 package com.io7m.ervilla.api;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * A request to publish a container port on the host.
  *
- * @param hostIP        The host IP (or localhost, if not specified)
+ * @param hostAddress   The host address to which to bind
  * @param hostPort      The host port
  * @param containerPort The container port
  * @param protocol      The port protocol
  */
 
 public record EPortPublish(
-  Optional<String> hostIP,
+  EPortAddressType hostAddress,
   int hostPort,
   int containerPort,
   EPortProtocol protocol)
@@ -38,7 +37,7 @@ public record EPortPublish(
   /**
    * A request to publish a container port on the host.
    *
-   * @param hostIP        The host IP (or localhost, if not specified)
+   * @param hostAddress   The host address to which to bind
    * @param hostPort      The host port
    * @param containerPort The container port
    * @param protocol      The port protocol
@@ -46,7 +45,7 @@ public record EPortPublish(
 
   public EPortPublish
   {
-    Objects.requireNonNull(hostIP, "hostIP");
+    Objects.requireNonNull(hostAddress, "hostAddress");
     Objects.requireNonNull(protocol, "protocol");
   }
 }

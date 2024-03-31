@@ -59,4 +59,22 @@ public @interface ErvillaConfiguration
    */
 
   TimeUnit startupWaitTimeUnit() default TimeUnit.SECONDS;
+
+  /**
+   * @return The liveness check pause time
+   */
+
+  long livenessCheckPauseTime() default 250L;
+
+  /**
+   * @return The liveness check pause time unit
+   */
+
+  TimeUnit livenessCheckPauseTimeUnit() default TimeUnit.MILLISECONDS;
+
+  /**
+   * @return {@code true} if debug logging is enabled
+   */
+
+  boolean debugLogging() default false;
 }

@@ -20,6 +20,7 @@ package com.io7m.ervilla.tests;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
+import com.io7m.ervilla.api.EPortAddressType;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.test_extension.ErvillaConfiguration;
 import com.io7m.ervilla.test_extension.ErvillaExtension;
@@ -54,13 +55,13 @@ public final class ErvillaExtensionContainerPerTest
           .setImageHash(
             "sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
           .addPublishPort(new EPortPublish(
-            Optional.empty(),
+            new EPortAddressType.All(),
             51000,
             51000,
             TCP
           ))
           .addPublishPort(new EPortPublish(
-            Optional.of("[::]"),
+            new EPortAddressType.All(),
             51001,
             51001,
             TCP
