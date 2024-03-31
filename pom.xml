@@ -13,7 +13,7 @@
 
   <groupId>com.io7m.ervilla</groupId>
   <artifactId>com.io7m.ervilla</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0-beta0001</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.ervilla</name>
@@ -33,7 +33,7 @@
     <com.io7m.quarrel.version>1.6.0</com.io7m.quarrel.version>
     <com.io7m.trasco.version>1.1.0</com.io7m.trasco.version>
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
-    <io7m.api.previousVersion>0.0.6-SNAPSHOT</io7m.api.previousVersion>
+    <io7m.api.previousVersion>1.0.0-beta0001</io7m.api.previousVersion>
     <io7m.java.targetJavaVersion>21</io7m.java.targetJavaVersion>
     <jqwik.version>1.8.4</jqwik.version>
     <junit.version>5.10.2</junit.version>
