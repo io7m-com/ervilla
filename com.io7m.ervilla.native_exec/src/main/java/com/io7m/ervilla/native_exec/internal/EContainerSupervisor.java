@@ -17,7 +17,6 @@
 package com.io7m.ervilla.native_exec.internal;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
-import com.io7m.ervilla.api.EContainerFactoryType;
 import com.io7m.ervilla.api.EContainerPodType;
 import com.io7m.ervilla.api.EContainerReference;
 import com.io7m.ervilla.api.EContainerSpec;
