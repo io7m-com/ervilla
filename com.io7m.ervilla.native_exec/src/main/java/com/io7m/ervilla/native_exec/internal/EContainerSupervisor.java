@@ -20,6 +20,7 @@ import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerFactoryType;
 import com.io7m.ervilla.api.EContainerReference;
 import com.io7m.ervilla.api.EContainerSpec;
+import com.io7m.ervilla.api.EContainerStop;
 import com.io7m.ervilla.api.EContainerSupervisorScope;
 import com.io7m.ervilla.api.EContainerSupervisorType;
 import com.io7m.ervilla.api.EContainerType;
@@ -587,14 +588,41 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     final var stopProc =
       this.executeLogged(
         Optional.of(name),
-        "close",
+        "stop",
         closeArgs,
         IGNORING
       );
 
     try {
       MDC.pushByKey("PID", Long.toUnsignedString(stopProc.pid()));
-      LOG.debug("Waiting for 'close' invocation.");
+      LOG.debug("Waiting for 'stop' invocation.");
+      stopProc.waitFor(3L, TimeUnit.SECONDS);
+      LOG.debug("Status {}", stopProc);
+    } finally {
+      MDC.popByKey("PID");
+    }
+  }
+
+  private void executeContainerKill(
+    final String name)
+    throws IOException, InterruptedException
+  {
+    final var closeArgs = new ArrayList<String>(6);
+    closeArgs.addAll(this.podman());
+    closeArgs.add("kill");
+    closeArgs.add(name);
+
+    final var stopProc =
+      this.executeLogged(
+        Optional.of(name),
+        "kill",
+        closeArgs,
+        IGNORING
+      );
+
+    try {
+      MDC.pushByKey("PID", Long.toUnsignedString(stopProc.pid()));
+      LOG.debug("Waiting for 'kill' invocation.");
       stopProc.waitFor(3L, TimeUnit.SECONDS);
       LOG.debug("Status {}", stopProc);
     } finally {
@@ -956,13 +984,20 @@ public final class EContainerSupervisor implements EContainerSupervisorType
     }
 
     @Override
-    public void stop()
+    public void stop(
+      final EContainerStop stop)
       throws InterruptedException, IOException
     {
+      Objects.requireNonNull(stop, "stop");
+
       try {
         this.mdcPush();
 
-        this.supervisor.executeContainerStop(this.name);
+        switch (stop) {
+          case STOP -> this.supervisor.executeContainerStop(this.name);
+          case KILL -> this.supervisor.executeContainerKill(this.name);
+        }
+
         this.process.waitFor(5L, TimeUnit.SECONDS);
         if (this.process.isAlive()) {
           throw new IOException(
@@ -1025,7 +1060,10 @@ public final class EContainerSupervisor implements EContainerSupervisorType
          */
 
         LOG.debug("Shutting down.");
-        this.supervisor.executeContainerStop(this.name);
+        switch (this.configuration.stopMethod()) {
+          case STOP -> this.supervisor.executeContainerStop(this.name);
+          case KILL -> this.supervisor.executeContainerKill(this.name);
+        }
         this.supervisor.executeContainerRemove(this.name);
 
         LOG.debug("Waiting for container shutdown.");

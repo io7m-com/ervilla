@@ -192,7 +192,8 @@ public final class ErvillaExtension
           annotation.livenessCheckPauseTime(),
           annotation.livenessCheckPauseTimeUnit().toChronoUnit()
         ),
-        annotation.debugLogging()
+        annotation.debugLogging(),
+        annotation.stopMethod()
       );
     }
     return configuration;

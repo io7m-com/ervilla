@@ -30,6 +30,7 @@ import java.util.Objects;
  * @param startupWaitTime        The startup wait time
  * @param livenessCheckPauseTime The pause time between liveness checks
  * @param debugLogging           Whether debug logging is enabled
+ * @param stopMethod             The stop method used for containers
  */
 
 public record EContainerConfiguration(
@@ -37,7 +38,8 @@ public record EContainerConfiguration(
   String podmanExecutable,
   Duration startupWaitTime,
   Duration livenessCheckPauseTime,
-  boolean debugLogging)
+  boolean debugLogging,
+  EContainerStop stopMethod)
 {
   /**
    * The container configuration.
@@ -47,6 +49,7 @@ public record EContainerConfiguration(
    * @param startupWaitTime        The startup wait time
    * @param livenessCheckPauseTime The pause time between liveness checks
    * @param debugLogging           Whether debug logging is enabled
+   * @param stopMethod             The stop method used for containers
    */
 
   public EContainerConfiguration
@@ -55,6 +58,7 @@ public record EContainerConfiguration(
     Objects.requireNonNull(podmanExecutable, "podmanExecutable");
     Objects.requireNonNull(startupWaitTime, "startupWaitTime");
     Objects.requireNonNull(livenessCheckPauseTime, "livenessCheckPauseTime");
+    Objects.requireNonNull(stopMethod, "stopMethod");
   }
 
   /**
@@ -71,7 +75,8 @@ public record EContainerConfiguration(
       "podman",
       Duration.ofSeconds(30L),
       Duration.ofMillis(500L),
-      false
+      false,
+      EContainerStop.STOP
     );
   }
 }

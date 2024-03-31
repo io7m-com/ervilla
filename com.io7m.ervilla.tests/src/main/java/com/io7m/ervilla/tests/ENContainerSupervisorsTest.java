@@ -18,6 +18,7 @@ package com.io7m.ervilla.tests;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
+import com.io7m.ervilla.api.EContainerStop;
 import com.io7m.ervilla.api.EPortAddressType;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EVolumeMount;
@@ -43,6 +44,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static com.io7m.ervilla.api.EContainerStop.KILL;
+import static com.io7m.ervilla.api.EContainerStop.STOP;
 import static com.io7m.ervilla.api.EContainerSupervisorScope.PER_TEST;
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -101,7 +104,8 @@ public final class ENContainerSupervisorsTest
           "THIS-DOES-NOT-EXIST",
           Duration.ofSeconds(30L),
           Duration.ofMillis(250L),
-          true
+          true,
+          STOP
         )
       );
 
@@ -251,9 +255,9 @@ public final class ENContainerSupervisorsTest
       assertEquals("HELLO!", Files.readString(fileOut));
       assertTrue(c.name().startsWith("ERVILLA-"));
 
-      c.stop();
+      c.stop(STOP);
       c.start();
-      c.stop();
+      c.stop(KILL);
       c.start();
     }
   }
@@ -285,11 +289,11 @@ public final class ENContainerSupervisorsTest
         );
 
       LOG.info("### STOP!");
-      c.stop();
+      c.stop(STOP);
       LOG.info("### START!");
       c.start();
       LOG.info("### STOP!");
-      c.stop();
+      c.stop(KILL);
       LOG.info("### START!");
       c.start();
 
