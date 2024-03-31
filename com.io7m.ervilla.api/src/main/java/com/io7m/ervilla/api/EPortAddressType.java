@@ -41,7 +41,7 @@ public sealed interface EPortAddressType
     @Override
     public String targetAddress()
     {
-      return "0.0.0.0";
+      return "127.0.0.1";
     }
   }
 
@@ -55,7 +55,7 @@ public sealed interface EPortAddressType
     @Override
     public String targetAddress()
     {
-      return "::";
+      return "[::1]";
     }
   }
 
@@ -69,24 +69,49 @@ public sealed interface EPortAddressType
     @Override
     public String targetAddress()
     {
-      return "::";
+      return "[::1]";
     }
   }
 
   /**
-   * Bind to a specific address.
+   * Bind to a specific IPv6 address.
    *
    * @param address The host address
    */
 
-  record Address(String address)
+  record Address6(String address)
     implements EPortAddressType
   {
     /**
-     * Bind to a specific address.
+     * Bind to a specific IPv6 address.
      */
 
-    public Address
+    public Address6
+    {
+      Objects.requireNonNull(address, "address");
+    }
+
+    @Override
+    public String targetAddress()
+    {
+      return "[%s]".formatted(this.address);
+    }
+  }
+
+  /**
+   * Bind to a specific IPv4 address.
+   *
+   * @param address The host address
+   */
+
+  record Address4(String address)
+    implements EPortAddressType
+  {
+    /**
+     * Bind to a specific IPv4 address.
+     */
+
+    public Address4
     {
       Objects.requireNonNull(address, "address");
     }

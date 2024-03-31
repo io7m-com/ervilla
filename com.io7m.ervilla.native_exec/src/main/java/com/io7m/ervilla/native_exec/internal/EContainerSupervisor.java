@@ -190,10 +190,11 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   private static String portSpec(
     final EPortPublish publish)
   {
-    return switch (publish.hostAddress()) {
-      case final EPortAddressType.Address address -> {
+    final var portAddress = publish.hostAddress();
+    return switch (portAddress) {
+      case final EPortAddressType.Address6 ignored -> {
         yield "%s:%s:%s/%s".formatted(
-          address.targetAddress(),
+          portAddress.targetAddress(),
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
           switch (publish.protocol()) {
@@ -202,7 +203,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           }
         );
       }
-      case final EPortAddressType.All all -> {
+      case final EPortAddressType.All ignored -> {
         yield "%s:%s/%s".formatted(
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
@@ -212,7 +213,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           }
         );
       }
-      case final EPortAddressType.AllIPv4 allIPv4 -> {
+      case final EPortAddressType.AllIPv4 ignored -> {
         yield "0.0.0.0:%s:%s/%s".formatted(
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
@@ -222,8 +223,19 @@ public final class EContainerSupervisor implements EContainerSupervisorType
           }
         );
       }
-      case final EPortAddressType.AllIPv6 allIPv6 -> {
+      case final EPortAddressType.AllIPv6 ignored -> {
         yield "[::]:%s:%s/%s".formatted(
+          Integer.valueOf(publish.hostPort()),
+          Integer.valueOf(publish.containerPort()),
+          switch (publish.protocol()) {
+            case TCP -> "tcp";
+            case UDP -> "udp";
+          }
+        );
+      }
+      case final EPortAddressType.Address4 ignored -> {
+        yield "%s:%s:%s/%s".formatted(
+          portAddress.targetAddress(),
           Integer.valueOf(publish.hostPort()),
           Integer.valueOf(publish.containerPort()),
           switch (publish.protocol()) {
