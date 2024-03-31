@@ -18,6 +18,7 @@ package com.io7m.ervilla.native_exec.internal;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerFactoryType;
+import com.io7m.ervilla.api.EContainerPodType;
 import com.io7m.ervilla.api.EContainerReference;
 import com.io7m.ervilla.api.EContainerSpec;
 import com.io7m.ervilla.api.EContainerStop;
@@ -506,7 +507,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   }
 
   @Override
-  public EContainerFactoryType createPod(
+  public EContainerPodType createPod(
     final List<EPortPublish> ports)
     throws IOException, InterruptedException
   {
@@ -668,7 +669,7 @@ public final class EContainerSupervisor implements EContainerSupervisorType
   }
 
   private static final class EPod
-    implements EContainerFactoryType, AutoCloseable
+    implements AutoCloseable, EContainerPodType
   {
     private final String name;
     private final EContainerSupervisor supervisor;
@@ -699,6 +700,12 @@ public final class EContainerSupervisor implements EContainerSupervisorType
       throws IOException, InterruptedException
     {
       this.supervisor.executePodDeletion(this.name);
+    }
+
+    @Override
+    public String name()
+    {
+      return this.name;
     }
   }
 
