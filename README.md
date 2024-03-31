@@ -22,6 +22,7 @@ during tests.
 ### Features
 
   * Conveniently and reliably start containers using `podman` in test suites.
+  * Programmable readiness checks for checking if a container is really ready for use.
   * Written in pure Java 21.
   * [OSGi](https://www.osgi.org/) ready.
   * [JPMS](https://en.wikipedia.org/wiki/Java_Platform_Module_System) ready.
@@ -99,18 +100,18 @@ public final class ErvillaExtensionContainerPerTest
         EContainerSpec.builder(
             "quay.io",
             "io7mcom/idstore",
-            "1.0.0-beta0013"
+            "1.1.0"
           )
           .setImageHash(
-            "sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
+            "sha256:e77ad1f7f606a42a6bb0bbc885030a647fa4b90c15d47d5b32f43f1c98475f6e")
           .addPublishPort(new EPortPublish(
-            Optional.empty(),
+            new EPortAddressType.All(),
             51000,
             51000,
             TCP
           ))
           .addPublishPort(new EPortPublish(
-            Optional.of("[::]"),
+            new EPortAddressType.All(),
             51001,
             51001,
             TCP
@@ -188,16 +189,16 @@ public final class ErvillaExtensionCloseAfterAllTest
         EContainerSpec.builder(
             "quay.io",
             "io7mcom/idstore",
-            "1.0.0-beta0013"
+            "1.1.0"
           )
           .addPublishPort(new EPortPublish(
-            Optional.empty(),
+            new EPortAddressType.All(),
             51000,
             51000,
             TCP
           ))
           .addPublishPort(new EPortPublish(
-            Optional.of("[::]"),
+            new EPortAddressType.All(),
             51001,
             51001,
             TCP
@@ -331,4 +332,32 @@ Assuming that `resetDatabase` can drop and recreate the container's
 database, and `createDatabase` does the initial creation of the
 database container, the above `Test1` and `Test0` classes will reuse
 the exact same database container instance.
+
+#### Readiness Checks
+
+It is possible to provide implementations of the `EReadyCheckType`
+interface for each container. A readiness check is a piece of code that
+is executed in a loop until it returns a positive response, and is responsible
+for performing some kind of image-specific check to determine if a container
+is actually ready for use.
+
+By default, with no readiness checks provided for a container, the
+system will only consider a container to be ready for use when the
+underlying `podman` executable says that the container is in state `Up`.
+However, for some images, the container being in the `Up` state doesn't
+necessarily mean that the container is actually ready for use.
+
+A good example of this is the images for [PostgreSQL](https://www.postgresql.org).
+The PostgreSQL server takes a few seconds to start up while it loads various
+bits of configuration and database state from the disk. This means that,
+despite the container being in the `Up` state, the database won't actually be
+ready to service database requests for at least a few seconds after startup.
+
+The `EPgReadyCheck` class is a PostgreSQL-specific
+readiness check that repeatedly tries to open a JDBC connection to a created
+PostgreSQL container, and the system won't consider the container to be
+ready for use until a JDBC connection succeeds.
+
+Other readiness checks exist, such as checks to attempt to connect to
+a bound TCP/IP socket on the container.
 
