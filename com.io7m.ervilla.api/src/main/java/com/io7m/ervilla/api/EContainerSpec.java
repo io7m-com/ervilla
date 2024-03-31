@@ -16,6 +16,7 @@
 
 package com.io7m.ervilla.api;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,15 +27,16 @@ import java.util.Optional;
 /**
  * Parameters needed to start a container.
  *
- * @param registry     The container registry (such as "quay.io")
- * @param imageName    The image name (such as "io7mcom/idstore")
- * @param imageTag     The image tag (such as "1.0.0-beta0013")
- * @param imageHash    The image hash (such as "sha256:ab38fabce3")
- * @param ports        The set of ports to publish
- * @param environment  The set of environment variables
- * @param arguments    The entrypoint arguments
- * @param volumeMounts The set of volume mounts
- * @param readyCheck   The check used to determine if the container is ready
+ * @param registry           The container registry (such as "quay.io")
+ * @param imageName          The image name (such as "io7mcom/idstore")
+ * @param imageTag           The image tag (such as "1.0.0-beta0013")
+ * @param imageHash          The image hash (such as "sha256:ab38fabce3")
+ * @param ports              The set of ports to publish
+ * @param environment        The set of environment variables
+ * @param arguments          The entrypoint arguments
+ * @param volumeMounts       The set of volume mounts
+ * @param readyCheck         A check used to determine if the container is ready
+ * @param readyCheckWaitTime The pause added after every ready check
  */
 
 public record EContainerSpec(
@@ -46,20 +48,22 @@ public record EContainerSpec(
   Map<String, String> environment,
   List<String> arguments,
   List<EVolumeMount> volumeMounts,
-  EReadyCheckType readyCheck)
+  EReadyCheckType readyCheck,
+  Duration readyCheckWaitTime)
 {
   /**
    * Parameters needed to start a container.
    *
-   * @param registry     The container registry (such as "quay.io")
-   * @param imageName    The image name (such as "io7mcom/idstore")
-   * @param imageTag     The image tag (such as "1.0.0-beta0013")
-   * @param imageHash    The image hash (such as "sha256:ab38fabce3")
-   * @param ports        The set of ports to publish
-   * @param environment  The set of environment variables
-   * @param arguments    The entrypoint arguments
-   * @param volumeMounts The set of volume mounts
-   * @param readyCheck   A check used to determine if the container is ready
+   * @param registry           The container registry (such as "quay.io")
+   * @param imageName          The image name (such as "io7mcom/idstore")
+   * @param imageTag           The image tag (such as "1.0.0-beta0013")
+   * @param imageHash          The image hash (such as "sha256:ab38fabce3")
+   * @param ports              The set of ports to publish
+   * @param environment        The set of environment variables
+   * @param arguments          The entrypoint arguments
+   * @param volumeMounts       The set of volume mounts
+   * @param readyCheck         A check used to determine if the container is ready
+   * @param readyCheckWaitTime The pause added after every ready check
    */
 
   public EContainerSpec
@@ -73,6 +77,7 @@ public record EContainerSpec(
     Objects.requireNonNull(registry, "registry");
     Objects.requireNonNull(readyCheck, "readyCheck");
     Objects.requireNonNull(volumeMounts, "volumeMounts");
+    Objects.requireNonNull(readyCheckWaitTime, "readyCheckWaitTime");
   }
 
   /**
@@ -123,6 +128,7 @@ public record EContainerSpec(
     private final Map<String, String> environment;
     private final List<String> arguments;
     private final List<EVolumeMount> volumeMounts;
+    private Duration readyCheckPauseTime;
 
     Builder(
       final String inRegistry,
@@ -148,6 +154,8 @@ public record EContainerSpec(
         new ArrayList<>();
       this.readyCheck =
         EReadyChecks.assumeAlwaysReady();
+      this.readyCheckPauseTime =
+        Duration.ofMillis(1000L);
     }
 
     /**
@@ -247,6 +255,21 @@ public record EContainerSpec(
     }
 
     /**
+     * Set the ready check pause time.
+     *
+     * @param pauseTime The pause time
+     *
+     * @return this
+     */
+
+    public Builder setReadyCheckPauseTime(
+      final Duration pauseTime)
+    {
+      this.readyCheckPauseTime = Objects.requireNonNull(pauseTime, "pauseTime");
+      return this;
+    }
+
+    /**
      * @return A container spec based on the parameters so far
      */
 
@@ -261,7 +284,8 @@ public record EContainerSpec(
         Map.copyOf(this.environment),
         List.copyOf(this.arguments),
         List.copyOf(this.volumeMounts),
-        this.readyCheck
+        this.readyCheck,
+        this.readyCheckPauseTime
       );
     }
   }

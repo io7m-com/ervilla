@@ -16,6 +16,8 @@
 
 package com.io7m.ervilla.test_extension;
 
+import com.io7m.ervilla.api.EContainerStop;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -59,4 +61,28 @@ public @interface ErvillaConfiguration
    */
 
   TimeUnit startupWaitTimeUnit() default TimeUnit.SECONDS;
+
+  /**
+   * @return The liveness check pause time
+   */
+
+  long livenessCheckPauseTime() default 250L;
+
+  /**
+   * @return The liveness check pause time unit
+   */
+
+  TimeUnit livenessCheckPauseTimeUnit() default TimeUnit.MILLISECONDS;
+
+  /**
+   * @return {@code true} if debug logging is enabled
+   */
+
+  boolean debugLogging() default false;
+
+  /**
+   * @return The stop method used to shut down containers
+   */
+
+  EContainerStop stopMethod() default EContainerStop.STOP;
 }

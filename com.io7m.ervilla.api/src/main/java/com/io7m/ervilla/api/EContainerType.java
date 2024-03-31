@@ -103,15 +103,17 @@ public interface EContainerType extends AutoCloseable
    * Stop the container but do not destroy it. The container can be started
    * again with {@link #start()}.
    *
+   * @param stop The method used to stop the container
+   *
    * @throws InterruptedException On interruption
    * @throws IOException          On errors
    */
 
-  void stop()
+  void stop(EContainerStop stop)
     throws InterruptedException, IOException;
 
   /**
-   * Start the container. This is only useful after a {@link #stop()} as
+   * Start the container. This is only useful after a {@link #stop(EContainerStop)} as
    * containers are automatically started up when created.
    *
    * @throws InterruptedException On interruption

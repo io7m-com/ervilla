@@ -18,9 +18,8 @@
 package com.io7m.ervilla.postgres;
 
 import com.io7m.ervilla.api.EContainerSpec;
+import com.io7m.ervilla.api.EPortAddressType;
 import com.io7m.ervilla.api.EPortPublish;
-
-import java.util.Optional;
 
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
 
@@ -52,7 +51,7 @@ public final class EPgSpecs
   public static EContainerSpec.Builder builder(
     final String repository,
     final String version,
-    final Optional<String> address,
+    final EPortAddressType address,
     final int hostPort,
     final String databaseName,
     final String databaseUser,
@@ -73,7 +72,7 @@ public final class EPgSpecs
       .addEnvironmentVariable("POSTGRES_PASSWORD", databasePassword)
       .addEnvironmentVariable("POSTGRES_USER", databaseUser)
       .setReadyCheck(EPgReadyCheck.create(
-        address.orElse("localhost"),
+        address,
         hostPort,
         databaseUser,
         databasePassword,
@@ -96,7 +95,7 @@ public final class EPgSpecs
 
   public static EContainerSpec.Builder builderFromDockerIO(
     final String version,
-    final Optional<String> address,
+    final EPortAddressType address,
     final int hostPort,
     final String databaseName,
     final String databaseUser,

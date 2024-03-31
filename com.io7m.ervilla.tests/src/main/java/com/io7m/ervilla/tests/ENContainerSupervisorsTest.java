@@ -18,7 +18,8 @@ package com.io7m.ervilla.tests;
 
 import com.io7m.ervilla.api.EContainerConfiguration;
 import com.io7m.ervilla.api.EContainerSpec;
-import com.io7m.ervilla.api.EContainerSupervisorScope;
+import com.io7m.ervilla.api.EContainerStop;
+import com.io7m.ervilla.api.EPortAddressType;
 import com.io7m.ervilla.api.EPortPublish;
 import com.io7m.ervilla.api.EVolumeMount;
 import com.io7m.ervilla.native_exec.ENContainerSupervisors;
@@ -26,27 +27,47 @@ import com.io7m.ervilla.postgres.EPgSpecs;
 import com.io7m.lanark.core.RDottedName;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.ConnectException;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static com.io7m.ervilla.api.EContainerStop.KILL;
+import static com.io7m.ervilla.api.EContainerStop.STOP;
 import static com.io7m.ervilla.api.EContainerSupervisorScope.PER_TEST;
 import static com.io7m.ervilla.api.EPortProtocol.TCP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Timeout(value = 30L, unit = TimeUnit.SECONDS)
 public final class ENContainerSupervisorsTest
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(ENContainerSupervisorsTest.class);
+
   private static final RDottedName PROJECT_NAME =
     new RDottedName("com.io7m.ervilla");
+
+  private static final String POSTGRES_VERSION =
+    "15.6-alpine3.19";
+
+  private static final String IDSTORE_VERSION =
+    "1.1.0";
+
+  private static final String IDSTORE_HASH =
+    "sha256:e77ad1f7f606a42a6bb0bbc885030a647fa4b90c15d47d5b32f43f1c98475f6e";
 
   @Test
   public void testIsSupported()
@@ -81,8 +102,11 @@ public final class ENContainerSupervisorsTest
         new EContainerConfiguration(
           PROJECT_NAME,
           "THIS-DOES-NOT-EXIST",
-          30L,
-          TimeUnit.SECONDS)
+          Duration.ofSeconds(30L),
+          Duration.ofMillis(250L),
+          true,
+          STOP
+        )
       );
 
     assertTrue(support.isEmpty());
@@ -109,18 +133,17 @@ public final class ENContainerSupervisorsTest
           EContainerSpec.builder(
               "quay.io",
               "io7mcom/idstore",
-              "1.0.0-beta0013"
+              IDSTORE_VERSION
             )
-            .setImageHash(
-              "sha256:c3c679cbda4fc5287743c5a3edc1ffa31babfaf5be6e3b0705f37ee969ff15ec")
+            .setImageHash(IDSTORE_HASH)
             .addPublishPort(new EPortPublish(
-              Optional.empty(),
+              new EPortAddressType.All(),
               51000,
               51000,
               TCP
             ))
             .addPublishPort(new EPortPublish(
-              Optional.of("[::]"),
+              new EPortAddressType.All(),
               51001,
               51001,
               TCP
@@ -157,7 +180,7 @@ public final class ENContainerSupervisorsTest
         supervisor.createPod(
           List.of(
             new EPortPublish(
-              Optional.empty(),
+              new EPortAddressType.All(),
               5432,
               5432,
               TCP
@@ -167,8 +190,8 @@ public final class ENContainerSupervisorsTest
 
       pod.start(
         EPgSpecs.builderFromDockerIO(
-          "15.3-alpine3.18",
-          Optional.empty(),
+          POSTGRES_VERSION,
+          new EPortAddressType.All(),
           5432,
           "db-xyz",
           "db-user",
@@ -210,8 +233,8 @@ public final class ENContainerSupervisorsTest
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
-            "15.3-alpine3.18",
-            Optional.of("[::]"),
+            POSTGRES_VERSION,
+            new EPortAddressType.All(),
             5432,
             "db-xyz",
             "db-user",
@@ -232,9 +255,9 @@ public final class ENContainerSupervisorsTest
       assertEquals("HELLO!", Files.readString(fileOut));
       assertTrue(c.name().startsWith("ERVILLA-"));
 
-      c.stop();
+      c.stop(STOP);
       c.start();
-      c.stop();
+      c.stop(KILL);
       c.start();
     }
   }
@@ -256,8 +279,8 @@ public final class ENContainerSupervisorsTest
       final var c =
         supervisor.start(
           EPgSpecs.builderFromDockerIO(
-            "15.3-alpine3.18",
-            Optional.of("[::]"),
+            POSTGRES_VERSION,
+            new EPortAddressType.All(),
             5432,
             "db-xyz",
             "db-user",
@@ -265,13 +288,13 @@ public final class ENContainerSupervisorsTest
           ).build()
         );
 
-      LOG.debug("### STOP!");
-      c.stop();
-      LOG.debug("### START!");
+      LOG.info("### STOP!");
+      c.stop(STOP);
+      LOG.info("### START!");
       c.start();
-      LOG.debug("### STOP!");
-      c.stop();
-      LOG.debug("### START!");
+      LOG.info("### STOP!");
+      c.stop(KILL);
+      LOG.info("### START!");
       c.start();
 
       final var e =
@@ -281,6 +304,218 @@ public final class ENContainerSupervisorsTest
         ));
 
       assertEquals(0, e);
+    }
+  }
+
+  @Test
+  @Timeout(value = 10L, unit = TimeUnit.SECONDS)
+  public void testBindAllIPv4()
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(
+          EContainerConfiguration.defaults(PROJECT_NAME))
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
+      final var c =
+        supervisor.start(
+          EContainerSpec.builder(
+              "quay.io",
+              "prometheus/busybox",
+              "latest"
+            )
+            .addPublishPort(new EPortPublish(
+              new EPortAddressType.AllIPv4(),
+              60000,
+              60000,
+              TCP
+            ))
+            .addArgument("nc")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-l")
+            .addArgument("-s")
+            .addArgument("0.0.0.0")
+            .addArgument("-e")
+            .addArgument("echo hello")
+            .addArgument("60000")
+            .build()
+        );
+      assertTrue(c.name().startsWith("ERVILLA-"));
+
+      while (true) {
+        try (var socket = new Socket()) {
+          socket.connect(new InetSocketAddress("0.0.0.0", 60000));
+          return;
+        } catch (final ConnectException e) {
+          Thread.sleep(500L);
+        }
+      }
+    }
+  }
+
+  @Test
+  @Timeout(value = 10L, unit = TimeUnit.SECONDS)
+  public void testBindAllIPv6()
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(
+          EContainerConfiguration.defaults(PROJECT_NAME))
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
+      final var c =
+        supervisor.start(
+          EContainerSpec.builder(
+              "quay.io",
+              "prometheus/busybox",
+              "latest"
+            )
+            .addPublishPort(new EPortPublish(
+              new EPortAddressType.AllIPv6(),
+              60000,
+              60000,
+              TCP
+            ))
+            .addArgument("nc")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-l")
+            .addArgument("-s")
+            .addArgument("::")
+            .addArgument("-e")
+            .addArgument("echo hello")
+            .addArgument("60000")
+            .build()
+        );
+      assertTrue(c.name().startsWith("ERVILLA-"));
+
+      while (true) {
+        try (var socket = new Socket()) {
+          socket.connect(new InetSocketAddress("::1", 60000));
+          return;
+        } catch (final ConnectException e) {
+          Thread.sleep(500L);
+        }
+      }
+    }
+  }
+
+  @Test
+  @Timeout(value = 10L, unit = TimeUnit.SECONDS)
+  public void testBindAll0()
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(
+          EContainerConfiguration.defaults(PROJECT_NAME))
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
+      final var c =
+        supervisor.start(
+          EContainerSpec.builder(
+              "quay.io",
+              "prometheus/busybox",
+              "latest"
+            )
+            .addPublishPort(new EPortPublish(
+              new EPortAddressType.All(),
+              60000,
+              60000,
+              TCP
+            ))
+            .addArgument("nc")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-l")
+            .addArgument("-e")
+            .addArgument("echo hello")
+            .addArgument("60000")
+            .build()
+        );
+      assertTrue(c.name().startsWith("ERVILLA-"));
+
+      while (true) {
+        try (var socket = new Socket()) {
+          socket.connect(new InetSocketAddress("0.0.0.0", 60000));
+          return;
+        } catch (final ConnectException e) {
+          Thread.sleep(500L);
+        }
+      }
+    }
+  }
+
+  @Test
+  @Timeout(value = 10L, unit = TimeUnit.SECONDS)
+  public void testBindAll1()
+    throws Exception
+  {
+    final var supervisors =
+      new ENContainerSupervisors();
+
+    Assumptions.assumeTrue(
+      supervisors.isSupported(
+          EContainerConfiguration.defaults(PROJECT_NAME))
+        .isPresent()
+    );
+
+    try (var supervisor =
+           supervisors.create(EContainerConfiguration.defaults(PROJECT_NAME), PER_TEST)) {
+      final var c =
+        supervisor.start(
+          EContainerSpec.builder(
+              "quay.io",
+              "prometheus/busybox",
+              "latest"
+            )
+            .addPublishPort(new EPortPublish(
+              new EPortAddressType.All(),
+              60000,
+              60000,
+              TCP
+            ))
+            .addArgument("nc")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-v")
+            .addArgument("-l")
+            .addArgument("-e")
+            .addArgument("echo hello")
+            .addArgument("60000")
+            .build()
+        );
+      assertTrue(c.name().startsWith("ERVILLA-"));
+
+      while (true) {
+        try (var socket = new Socket()) {
+          socket.connect(new InetSocketAddress("::1", 60000));
+          return;
+        } catch (final ConnectException e) {
+          Thread.sleep(500L);
+        }
+      }
     }
   }
 }

@@ -19,40 +19,46 @@ package com.io7m.ervilla.api;
 
 import com.io7m.lanark.core.RDottedName;
 
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The container configuration.
  *
- * @param projectName         The project name
- * @param podmanExecutable    The podman executable
- * @param startupWaitTime     The startup wait time
- * @param startupWaitTimeUnit The startup wait time unit
+ * @param projectName            The project name
+ * @param podmanExecutable       The podman executable
+ * @param startupWaitTime        The startup wait time
+ * @param livenessCheckPauseTime The pause time between liveness checks
+ * @param debugLogging           Whether debug logging is enabled
+ * @param stopMethod             The stop method used for containers
  */
 
 public record EContainerConfiguration(
   RDottedName projectName,
   String podmanExecutable,
-  long startupWaitTime,
-  TimeUnit startupWaitTimeUnit)
+  Duration startupWaitTime,
+  Duration livenessCheckPauseTime,
+  boolean debugLogging,
+  EContainerStop stopMethod)
 {
-
-
   /**
    * The container configuration.
    *
-   * @param projectName         The project name
-   * @param podmanExecutable    The podman executable
-   * @param startupWaitTime     The startup wait time
-   * @param startupWaitTimeUnit The startup wait time unit
+   * @param projectName            The project name
+   * @param podmanExecutable       The podman executable
+   * @param startupWaitTime        The startup wait time
+   * @param livenessCheckPauseTime The pause time between liveness checks
+   * @param debugLogging           Whether debug logging is enabled
+   * @param stopMethod             The stop method used for containers
    */
 
   public EContainerConfiguration
   {
     Objects.requireNonNull(projectName, "projectName");
     Objects.requireNonNull(podmanExecutable, "podmanExecutable");
-    Objects.requireNonNull(startupWaitTimeUnit, "startupWaitTimeUnit");
+    Objects.requireNonNull(startupWaitTime, "startupWaitTime");
+    Objects.requireNonNull(livenessCheckPauseTime, "livenessCheckPauseTime");
+    Objects.requireNonNull(stopMethod, "stopMethod");
   }
 
   /**
@@ -67,8 +73,10 @@ public record EContainerConfiguration(
     return new EContainerConfiguration(
       projectName,
       "podman",
-      30L,
-      TimeUnit.SECONDS
+      Duration.ofSeconds(30L),
+      Duration.ofMillis(500L),
+      false,
+      EContainerStop.STOP
     );
   }
 }

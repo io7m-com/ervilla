@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -183,8 +184,16 @@ public final class ErvillaExtension
       configuration = new EContainerConfiguration(
         new RDottedName(annotation.projectName()),
         annotation.podmanExecutable(),
-        annotation.startupWaitTime(),
-        annotation.startupWaitTimeUnit()
+        Duration.of(
+          annotation.startupWaitTime(),
+          annotation.startupWaitTimeUnit().toChronoUnit()
+        ),
+        Duration.of(
+          annotation.livenessCheckPauseTime(),
+          annotation.livenessCheckPauseTimeUnit().toChronoUnit()
+        ),
+        annotation.debugLogging(),
+        annotation.stopMethod()
       );
     }
     return configuration;
