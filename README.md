@@ -251,6 +251,22 @@ The following is a relatively safe way to achieve this:
 class TestServices {
   private static EContainerType DATABASE;
 
+  public static void resetDatabase(
+    final EContainerType container)
+  {
+    // Database-specific code here, to drop and recreate databases...
+    ...
+    ...
+  }
+
+  public static EContainerType createDatabase(
+    final EContainerSupervisorType supervisor)
+  {
+    // Database-specific code here, to create database containers...
+    ...
+    ...
+  }
+
   public static EContainerType database(
     final EContainerSupervisorType supervisor)
   {
@@ -272,7 +288,7 @@ class Test0 {
     throws Exception
   {
     DATABASE = TestServices.database(supervisor);
-    resetDatabase(DATABASE);
+    TestServices.resetDatabase(DATABASE);
   }
 
   @Test
@@ -305,7 +321,7 @@ class Test1 {
     throws Exception
   {
     DATABASE = TestServices.database(supervisor);
-    resetDatabase(DATABASE);
+    TestServices.resetDatabase(DATABASE);
   }
 
   @Test
