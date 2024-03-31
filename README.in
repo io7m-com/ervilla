@@ -330,7 +330,8 @@ By default, with no readiness checks provided for a container, the
 system will only consider a container to be ready for use when the
 underlying `podman` executable says that the container is in state `Up`.
 However, for some images, the container being in the `Up` state doesn't
-necessarily mean that the container is actually ready for use.
+necessarily mean that the container is actually ready for use, and this
+is where readiness checks should be used.
 
 A good example of this is the images for [PostgreSQL](https://www.postgresql.org).
 The PostgreSQL server takes a few seconds to start up while it loads various
