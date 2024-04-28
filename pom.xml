@@ -52,9 +52,9 @@
   </licenses>
 
   <scm>
-    <url>https://github.com/io7m/ervilla</url>
-    <connection>scm:git:https://github.com/io7m/ervilla</connection>
-    <developerConnection>scm:git:https://github.com/io7m/ervilla</developerConnection>
+    <url>https://www.github.com/io7m-com/ervilla</url>
+    <connection>scm:git:https://www.github.com/io7m-com/ervilla</connection>
+    <developerConnection>scm:git:https://www.github.com/io7m-com/ervilla</developerConnection>
   </scm>
 
   <developers>
@@ -67,7 +67,7 @@
   </developers>
 
   <issueManagement>
-    <url>https://www.github.com/io7m/ervilla/issues</url>
+    <url>https://www.github.com/io7m-com/ervilla/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
 
@@ -89,7 +89,7 @@
 
   <ciManagement>
     <system>GitHub Actions</system>
-    <url>https://github.com/ervilla/actions</url>
+    <url>https://www.github.com/io7m-com/ervilla/actions</url>
   </ciManagement>
 
   <prerequisites>

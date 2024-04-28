@@ -16,7 +16,7 @@
   <packaging>jar</packaging>
   <name>com.io7m.ervilla.api</name>
   <description>Podman testing service (API)</description>
-  <url>https://www.github.com/io7m/ervilla</url>
+  <url>https://www.io7m.com/software/ervilla</url>
 
   <dependencies>
     <dependency>
