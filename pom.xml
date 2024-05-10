@@ -13,7 +13,7 @@
 
   <groupId>com.io7m.ervilla</groupId>
   <artifactId>com.io7m.ervilla</artifactId>
-  <version>1.0.0-beta0002</version>
+  <version>1.0.0</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.ervilla</name>
@@ -30,11 +30,11 @@
 
   <properties>
     <!-- Configuration -->
-    <io7m.api.previousVersion>1.0.0-beta0002</io7m.api.previousVersion>
+    <io7m.api.previousVersion>1.0.0</io7m.api.previousVersion>
     <io7m.java.targetJavaVersion>21</io7m.java.targetJavaVersion>
 
     <!-- io7m dependencies. -->
-    <com.io7m.jade.version>1.0.2</com.io7m.jade.version>
+    <com.io7m.jade.version>1.0.3</com.io7m.jade.version>
     <com.io7m.quarrel.version>1.6.0</com.io7m.quarrel.version>
     <com.io7m.trasco.version>1.1.0</com.io7m.trasco.version>
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
@@ -52,9 +52,9 @@
   </licenses>
 
   <scm>
-    <url>https://github.com/io7m/ervilla</url>
-    <connection>scm:git:https://github.com/io7m/ervilla</connection>
-    <developerConnection>scm:git:https://github.com/io7m/ervilla</developerConnection>
+    <url>https://www.github.com/io7m-com/ervilla</url>
+    <connection>scm:git:https://www.github.com/io7m-com/ervilla</connection>
+    <developerConnection>scm:git:https://www.github.com/io7m-com/ervilla</developerConnection>
   </scm>
 
   <developers>
@@ -67,7 +67,7 @@
   </developers>
 
   <issueManagement>
-    <url>https://www.github.com/io7m/ervilla/issues</url>
+    <url>https://www.github.com/io7m-com/ervilla/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
 
@@ -89,7 +89,7 @@
 
   <ciManagement>
     <system>GitHub Actions</system>
-    <url>https://github.com/ervilla/actions</url>
+    <url>https://www.github.com/io7m-com/ervilla/actions</url>
   </ciManagement>
 
   <prerequisites>
@@ -101,22 +101,22 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>2.0.12</version>
+        <version>2.0.13</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.5.3</version>
+        <version>1.5.6</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.jdeferthrow</groupId>
         <artifactId>com.io7m.jdeferthrow.core</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.lanark</groupId>
         <artifactId>com.io7m.lanark.core</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
       </dependency>
       <dependency>
         <groupId>org.postgresql</groupId>
@@ -128,7 +128,7 @@
       <dependency>
         <groupId>org.xerial</groupId>
         <artifactId>sqlite-jdbc</artifactId>
-        <version>3.45.2.0</version>
+        <version>3.45.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.trasco</groupId>
@@ -184,7 +184,7 @@
       <dependency>
         <groupId>nl.jqno.equalsverifier</groupId>
         <artifactId>equalsverifier</artifactId>
-        <version>3.16</version>
+        <version>3.16.1</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -200,23 +200,6 @@
         <groupId>net.jqwik</groupId>
         <artifactId>jqwik-engine</artifactId>
         <version>${jqwik.version}</version>
-      </dependency>
-
-      <!-- CLI -->
-      <dependency>
-        <groupId>com.io7m.quarrel</groupId>
-        <artifactId>com.io7m.quarrel.core</artifactId>
-        <version>${com.io7m.quarrel.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.io7m.quarrel</groupId>
-        <artifactId>com.io7m.quarrel.ext.logback</artifactId>
-        <version>${com.io7m.quarrel.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.io7m.quarrel</groupId>
-        <artifactId>com.io7m.quarrel.ext.xstructural</artifactId>
-        <version>${com.io7m.quarrel.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

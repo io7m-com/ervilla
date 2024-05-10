@@ -9,14 +9,14 @@
   <parent>
     <artifactId>com.io7m.ervilla</artifactId>
     <groupId>com.io7m.ervilla</groupId>
-    <version>1.0.0-beta0002</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>com.io7m.ervilla.native_exec</artifactId>
 
   <packaging>jar</packaging>
   <name>com.io7m.ervilla.native_exec</name>
   <description>Podman testing service (Native implementation)</description>
-  <url>https://www.github.com/io7m/ervilla</url>
+  <url>https://www.io7m.com/software/ervilla</url>
 
   <dependencies>
     <dependency>
