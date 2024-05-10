@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<c:changelog xmlns:c="urn:com.io7m.changelog:4.0" project="com.io7m.ervilla">
-    <c:releases/>
-    <c:ticket-systems>
-        <c:ticket-system default="true" id="com.github.io7m.ervilla" url="https://www.github.com/io7m/ervilla/issues/"/>
-    </c:ticket-systems>
+<c:changelog project="com.io7m.ervilla" xmlns:c="urn:com.io7m.changelog:4.0">
+  <c:releases>
+    <c:release date="2024-05-10T18:38:14+00:00" is-open="true" ticket-system="com.github.io7m.ervilla" version="1.0.0">
+      <c:changes>
+        <c:change date="2024-05-10T18:38:14+00:00" summary="Initial public release."/>
+      </c:changes>
+    </c:release>
+  </c:releases>
+  <c:ticket-systems>
+    <c:ticket-system default="true" id="com.github.io7m.ervilla" url="https://www.github.com/io7m/ervilla/issues/"/>
+  </c:ticket-systems>
 </c:changelog>
