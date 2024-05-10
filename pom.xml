@@ -201,23 +201,6 @@
         <artifactId>jqwik-engine</artifactId>
         <version>${jqwik.version}</version>
       </dependency>
-
-      <!-- CLI -->
-      <dependency>
-        <groupId>com.io7m.quarrel</groupId>
-        <artifactId>com.io7m.quarrel.core</artifactId>
-        <version>${com.io7m.quarrel.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.io7m.quarrel</groupId>
-        <artifactId>com.io7m.quarrel.ext.logback</artifactId>
-        <version>${com.io7m.quarrel.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.io7m.quarrel</groupId>
-        <artifactId>com.io7m.quarrel.ext.xstructural</artifactId>
-        <version>${com.io7m.quarrel.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
