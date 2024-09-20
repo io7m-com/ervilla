@@ -36,7 +36,7 @@
     <!-- io7m dependencies. -->
     <com.io7m.jade.version>1.0.3</com.io7m.jade.version>
     <com.io7m.quarrel.version>1.6.0</com.io7m.quarrel.version>
-    <com.io7m.trasco.version>2.0.0</com.io7m.trasco.version>
+    <com.io7m.trasco.version>3.0.0</com.io7m.trasco.version>
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
 
     <!-- Third-party dependencies. -->
