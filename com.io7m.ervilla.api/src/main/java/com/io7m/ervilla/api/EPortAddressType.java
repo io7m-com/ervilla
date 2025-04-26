@@ -84,6 +84,8 @@ public sealed interface EPortAddressType
   {
     /**
      * Bind to a specific IPv6 address.
+     *
+     * @param address The host address
      */
 
     public Address6
@@ -109,6 +111,8 @@ public sealed interface EPortAddressType
   {
     /**
      * Bind to a specific IPv4 address.
+     *
+     * @param address The host address
      */
 
     public Address4
