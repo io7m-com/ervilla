@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2026 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,31 +15,16 @@
  */
 
 /**
- * Podman testing service (Test suite)
+ * Podman testing service (Keycloak support)
  */
 
-open module com.io7m.ervilla.tests
+module com.io7m.ervilla.keycloak
 {
-  requires com.io7m.ervilla.api;
-  requires com.io7m.ervilla.native_exec;
-  requires com.io7m.ervilla.postgres;
-  requires com.io7m.ervilla.test_extension;
-
   requires static org.osgi.annotation.bundle;
   requires static org.osgi.annotation.versioning;
 
-  requires java.sql;
+  requires com.io7m.ervilla.api;
   requires org.slf4j;
-  requires com.io7m.lanark.core;
 
-  requires org.junit.jupiter.api;
-  requires org.junit.jupiter.engine;
-  requires org.junit.platform.commons;
-  requires org.junit.platform.engine;
-  requires org.junit.platform.launcher;
-  requires org.postgresql.jdbc;
-  requires com.io7m.ervilla.keycloak;
-  requires java.net.http;
-
-  exports com.io7m.ervilla.tests;
+  exports com.io7m.ervilla.keycloak;
 }

@@ -1,9 +1,97 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <c:changelog project="com.io7m.ervilla" xmlns:c="urn:com.io7m.changelog:4.0">
   <c:releases>
-    <c:release date="2024-05-10T18:41:13+00:00" is-open="false" ticket-system="com.github.io7m.ervilla" version="1.0.0">
+    <c:release date="2024-05-10T00:00:00+00:00" is-open="false" ticket-system="com.github.io7m.ervilla" version="1.0.0">
       <c:changes>
         <c:change date="2024-05-10T00:00:00+00:00" summary="Initial public release."/>
+      </c:changes>
+    </c:release>
+    <c:release date="2026-02-07T13:29:35+00:00" is-open="false" ticket-system="com.github.io7m.ervilla" version="1.1.0">
+      <c:changes>
+        <c:change date="2024-05-13T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.11.0 → 5.12.0."/>
+        <c:change date="2024-05-27T00:00:00+00:00" summary="Update jqwik.version:1.8.4 → 1.8.5."/>
+        <c:change date="2024-05-28T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.45.3.0 → 3.46.0.0."/>
+        <c:change date="2024-06-28T00:00:00+00:00" summary="Update junit.version:5.10.2 → 5.10.3."/>
+        <c:change date="2024-07-01T00:00:00+00:00" summary="Update jqwik.version:1.8.5 → 1.9.0."/>
+        <c:change date="2024-07-30T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.46.0.0 → 3.46.0.1."/>
+        <c:change date="2024-08-07T00:00:00+00:00" summary="Update org.slf4j:slf4j-api:2.0.13 → 2.0.14."/>
+        <c:change date="2024-08-09T00:00:00+00:00" summary="Update org.slf4j:slf4j-api:2.0.14 → 2.0.15."/>
+        <c:change date="2024-08-12T00:00:00+00:00" summary="Update org.slf4j:slf4j-api:2.0.15 → 2.0.16."/>
+        <c:change date="2024-08-15T00:00:00+00:00" summary="Update junit.version:5.10.3 → 5.11.0."/>
+        <c:change date="2024-08-16T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.6 → 1.5.7."/>
+        <c:change date="2024-08-19T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.46.0.1 → 3.46.1.0."/>
+        <c:change date="2024-08-23T00:00:00+00:00" summary="Update org.postgresql:postgresql:42.7.3 → 42.7.4."/>
+        <c:change date="2024-08-26T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.16.1 → 3.16.2."/>
+        <c:change date="2024-08-28T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.12.0 → 5.13.0."/>
+        <c:change date="2024-09-09T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.7 → 1.5.8."/>
+        <c:change date="2024-09-19T00:00:00+00:00" summary="Update com.io7m.trasco.version:1.1.0 → 2.0.0."/>
+        <c:change date="2024-09-20T00:00:00+00:00" summary="Update com.io7m.trasco.version:2.0.0 → 3.0.0."/>
+        <c:change date="2024-09-25T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.16.2 → 3.17."/>
+        <c:change date="2024-09-26T00:00:00+00:00" summary="Update junit.version:5.11.0 → 5.11.1."/>
+        <c:change date="2024-09-27T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.46.1.0 → 3.46.1.3."/>
+        <c:change date="2024-09-30T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.13.0 → 5.14.0."/>
+        <c:change date="2024-10-01T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.14.0 → 5.14.1."/>
+        <c:change date="2024-10-01T00:00:00+00:00" summary="Update jqwik.version:1.9.0 → 1.9.1."/>
+        <c:change date="2024-10-03T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.17 → 3.17.1."/>
+        <c:change date="2024-10-07T00:00:00+00:00" summary="Update junit.version:5.11.1 → 5.11.2."/>
+        <c:change date="2024-10-09T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.8 → 1.5.9."/>
+        <c:change date="2024-10-14T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.9 → 1.5.10."/>
+        <c:change date="2024-10-16T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.14.1 → 5.14.2."/>
+        <c:change date="2024-10-16T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.10 → 1.5.11."/>
+        <c:change date="2024-10-23T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.46.1.3 → 3.47.0.0."/>
+        <c:change date="2024-10-28T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.11 → 1.5.12."/>
+        <c:change date="2024-10-28T00:00:00+00:00" summary="Update org.junit:junit-bom:5.11.2 → 5.11.3."/>
+        <c:change date="2024-11-06T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.17.1 → 3.17.2."/>
+        <c:change date="2024-11-08T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.17.2 → 3.17.3."/>
+        <c:change date="2024-11-26T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.47.0.0 → 3.47.1.0."/>
+        <c:change date="2024-12-02T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.17.3 → 3.17.4."/>
+        <c:change date="2024-12-04T00:00:00+00:00" summary="Update jqwik.version:1.9.1 → 1.9.2."/>
+        <c:change date="2024-12-09T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.17.4 → 3.17.5."/>
+        <c:change date="2024-12-17T00:00:00+00:00" summary="Update org.junit:junit-bom:5.11.3 → 5.11.4."/>
+        <c:change date="2024-12-19T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.12 → 1.5.13."/>
+        <c:change date="2024-12-20T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.13 → 1.5.14."/>
+        <c:change date="2024-12-23T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.14 → 1.5.15."/>
+        <c:change date="2024-12-25T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.17.5 → 3.18."/>
+        <c:change date="2025-01-03T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.14.2 → 5.15.2."/>
+        <c:change date="2025-01-03T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.47.1.0 → 3.47.2.0."/>
+        <c:change date="2025-01-06T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.15 → 1.5.16."/>
+        <c:change date="2025-01-10T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.18 → 3.18.1."/>
+        <c:change date="2025-01-15T00:00:00+00:00" summary="Update org.postgresql:postgresql:42.7.4 → 42.7.5."/>
+        <c:change date="2025-01-16T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.47.2.0 → 3.48.0.0."/>
+        <c:change date="2025-01-27T00:00:00+00:00" summary="Update codecov/codecov-action:5.1.2 → 5.3.1."/>
+        <c:change date="2025-01-31T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.18.1 → 3.18.2."/>
+        <c:change date="2025-03-01T00:00:00+00:00" summary="Update org.slf4j:slf4j-api:2.0.16 → 2.0.17."/>
+        <c:change date="2025-03-01T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.48.0.0 → 3.49.1.0."/>
+        <c:change date="2025-04-01T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.18.2 → 3.19.2."/>
+        <c:change date="2025-04-01T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.16 → 1.5.18."/>
+        <c:change date="2025-04-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.11.4 → 5.12.1."/>
+        <c:change date="2025-05-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.12.1 → 5.12.2."/>
+        <c:change date="2025-05-01T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.15.2 → 5.17.0."/>
+        <c:change date="2025-05-01T00:00:00+00:00" summary="Update nl.jqno.equalsverifier:equalsverifier:3.19.2 → 3.19.4."/>
+        <c:change date="2025-06-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.12.2 → 5.13.0."/>
+        <c:change date="2025-06-01T00:00:00+00:00" summary="Update org.postgresql:postgresql:42.7.5 → 42.7.6."/>
+        <c:change date="2025-06-01T00:00:00+00:00" summary="Update com.io7m.trasco.version:3.0.0 → 3.1.1."/>
+        <c:change date="2025-06-01T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.17.0 → 5.18.0."/>
+        <c:change date="2025-07-01T00:00:00+00:00" summary="Update org.postgresql:postgresql:42.7.6 → 42.7.7."/>
+        <c:change date="2025-08-01T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.49.1.0 → 3.50.3.0."/>
+        <c:change date="2025-08-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.13.0 → 5.13.4."/>
+        <c:change date="2025-08-24T00:00:00+00:00" summary="Update jqwik.version:1.9.2 → 1.9.3."/>
+        <c:change date="2025-10-01T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.18.0 → 5.20.0."/>
+        <c:change date="2025-10-01T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.18 → 1.5.19."/>
+        <c:change date="2025-10-01T00:00:00+00:00" summary="Update org.postgresql:postgresql:42.7.7 → 42.7.8."/>
+        <c:change date="2025-10-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.13.4 → 5.14.0."/>
+        <c:change date="2025-11-01T00:00:00+00:00" summary="Update actions/upload-artifact:4.6.2 → 5.0.0."/>
+        <c:change date="2025-11-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.14.0 → 5.14.1."/>
+        <c:change date="2025-11-01T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.19 → 1.5.20."/>
+        <c:change date="2025-12-01T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.50.3.0 → 3.51.0.0."/>
+        <c:change date="2026-01-01T00:00:00+00:00" summary="Update org.xerial:sqlite-jdbc:3.51.0.0 → 3.51.1.0."/>
+        <c:change date="2026-01-01T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.20 → 1.5.21."/>
+        <c:change date="2026-01-01T00:00:00+00:00" summary="Update org.mockito:mockito-core:5.20.0 → 5.21.0."/>
+        <c:change date="2026-01-01T00:00:00+00:00" summary="Update codecov/codecov-action:5.5.1 → 5.5.2."/>
+        <c:change date="2026-02-01T00:00:00+00:00" summary="Update ch.qos.logback:logback-classic:1.5.21 → 1.5.24."/>
+        <c:change date="2026-02-01T00:00:00+00:00" summary="Update org.junit:junit-bom:5.14.1 → 5.14.2."/>
+        <c:change date="2026-02-01T00:00:00+00:00" summary="Update actions/checkout:6.0.1 → 6.0.2."/>
+        <c:change date="2026-02-07T00:00:00+00:00" summary="Add support for Keycloak."/>
       </c:changes>
     </c:release>
   </c:releases>
