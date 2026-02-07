@@ -11,11 +11,11 @@
     <groupId>com.io7m.ervilla</groupId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
-  <artifactId>com.io7m.ervilla.test_extension</artifactId>
+  <artifactId>com.io7m.ervilla.keycloak</artifactId>
 
   <packaging>jar</packaging>
-  <name>com.io7m.ervilla.test_extension</name>
-  <description>Podman testing service (Test extension)</description>
+  <name>com.io7m.ervilla.keycloak</name>
+  <description>Podman testing service (Keycloak support)</description>
   <url>https://www.io7m.com/software/ervilla</url>
 
   <dependencies>
@@ -23,24 +23,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>com.io7m.ervilla.api</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>com.io7m.ervilla.native_exec</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.io7m.lanark</groupId>
-      <artifactId>com.io7m.lanark.core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
     </dependency>
 
     <dependency>
