@@ -11,7 +11,7 @@
 
   <groupId>com.io7m.ervilla</groupId>
   <artifactId>com.io7m.ervilla</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0-SNAPSHOT</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.ervilla</name>
@@ -31,7 +31,7 @@
     <io7m.workID>ba9c0733-a5d0-3652-9462-a1b596a70f54</io7m.workID>
 
     <!-- Configuration -->
-    <io7m.api.previousVersion>1.0.0</io7m.api.previousVersion>
+    <io7m.api.previousVersion>1.1.0</io7m.api.previousVersion>
     <io7m.java.targetJavaVersion>21</io7m.java.targetJavaVersion>
 
     <!-- io7m dependencies. -->
