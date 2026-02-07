@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2026 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,17 +15,12 @@
  */
 
 /**
- * Podman testing service (API)
+ * Podman testing service (Keycloak support)
  */
 
-module com.io7m.ervilla.api
-{
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+@Version("1.0.0")
+@Export
+package com.io7m.ervilla.keycloak;
 
-  requires com.io7m.lanark.core;
-  requires org.slf4j;
-  requires java.net.http;
-
-  exports com.io7m.ervilla.api;
-}
+import org.osgi.annotation.bundle.Export;
+import org.osgi.annotation.versioning.Version;
